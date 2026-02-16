@@ -1,0 +1,1815 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0A0E14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Alka Qur'an Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="assets/quran-icon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0A0E14;
+            --bg-card: #141B24;
+            --bg-card-hover: #1A2330;
+            --accent-green: #00D26A;
+            --accent-green-dark: #00B85C;
+            --accent-green-light: #00E676;
+            --text-primary: #FFFFFF;
+            --text-secondary: #8B949E;
+            --text-muted: #6E7681;
+            --border-color: #21262D;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Setup Screen */
+        .setup-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+            text-align: center;
+            position: relative;
+        }
+
+        .setup-screen.hidden {
+            display: none;
+        }
+
+        .setup-logo {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .setup-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 8px 32px rgba(0, 210, 106, 0.3));
+        }
+
+        .setup-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .setup-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+
+        .setup-form {
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .date-input, .select-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            color: var(--text-primary);
+            font-size: 16px;
+            outline: none;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .date-input:focus, .select-input:focus {
+            border-color: var(--accent-green);
+        }
+
+        .date-input::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
+        .select-input {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238B949E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 20px;
+        }
+
+        .start-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-green-dark));
+            border: none;
+            border-radius: 16px;
+            color: var(--bg-primary);
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 12px;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 210, 106, 0.4);
+        }
+
+        .start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .brand-logo-bottom {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0.6;
+        }
+
+        .brand-logo-bottom img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        /* Main App */
+        .main-app {
+            display: none;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .main-app.active {
+            display: block;
+        }
+
+        /* Header */
+        .app-header {
+            background: var(--bg-card);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .header-progress {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .progress-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: conic-gradient(var(--accent-green) var(--progress, 0%), var(--border-color) 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .progress-circle::before {
+            content: '';
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            background: var(--bg-card);
+            border-radius: 50%;
+        }
+
+        .progress-text {
+            position: relative;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        /* Date Info */
+        .date-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            font-size: 13px;
+        }
+
+        .date-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .date-info-label {
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .date-info-value {
+            font-weight: 600;
+            color: var(--accent-green);
+        }
+
+        /* Horizontal Calendar */
+        .calendar-section {
+            padding: 20px;
+        }
+
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .calendar-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-btn {
+            width: 32px;
+            height: 32px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-green);
+        }
+
+        .nav-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Horizontal Scroll Container */
+        .calendar-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 4px 4px 16px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .calendar-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .day-card {
+            flex-shrink: 0;
+            width: 72px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .day-card:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .day-card.active {
+            border-color: var(--accent-green);
+            background: var(--bg-card-hover);
+        }
+
+        .day-card.completed {
+            border-color: var(--accent-green);
+            background: linear-gradient(180deg, rgba(0, 210, 106, 0.1), var(--bg-card));
+        }
+
+        .day-card.completed .day-number {
+            color: var(--accent-green);
+        }
+
+        .day-card.today {
+            border-color: var(--accent-green-light);
+            box-shadow: 0 0 0 2px rgba(0, 210, 106, 0.2);
+        }
+
+        .day-weekday {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .day-number {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .day-month {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .day-progress-mini {
+            margin-top: 8px;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .day-progress-fill {
+            height: 100%;
+            background: var(--accent-green);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* Session Details Panel */
+        .session-panel {
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            padding: 20px;
+            min-height: calc(100vh - 280px);
+        }
+
+        .session-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .session-panel-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .session-panel-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .session-stats {
+            display: flex;
+            gap: 16px;
+        }
+
+        .session-stat {
+            text-align: center;
+        }
+
+        .session-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        .session-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Session List */
+        .session-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .session-item {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .session-item:hover {
+            border-color: var(--accent-green);
+        }
+
+        .session-item.completed {
+            background: linear-gradient(90deg, rgba(0, 210, 106, 0.1), var(--bg-primary));
+            border-color: var(--accent-green);
+        }
+
+        .session-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .session-checkbox {
+            width: 28px;
+            height: 28px;
+            border: 2px solid var(--text-muted);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .session-item.completed .session-checkbox {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .session-checkbox svg {
+            width: 16px;
+            height: 16px;
+            color: var(--bg-primary);
+            opacity: 0;
+        }
+
+        .session-item.completed .session-checkbox svg {
+            opacity: 1;
+        }
+
+        .session-number {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .session-item.completed .session-number {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .session-pages {
+            margin-left: auto;
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .session-reading {
+            padding-left: 40px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .session-item.completed .session-reading {
+            color: var(--text-muted);
+        }
+
+        .surah-name {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+        }
+
+        /* Floating Action Buttons */
+        .fab-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 1000;
+        }
+
+        .fab-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            text-decoration: none;
+        }
+
+        .fab-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .fab-reset {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .fab-reset:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .fab-donate {
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-green-dark));
+            color: var(--bg-primary);
+            box-shadow: 0 4px 16px rgba(0, 210, 106, 0.4);
+        }
+
+        .fab-donate:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 210, 106, 0.5);
+        }
+
+        /* Success Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            max-width: 360px;
+            width: 90%;
+            transform: scale(0.9);
+            transition: all 0.3s ease;
+            border: 2px solid var(--accent-green);
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 24px;
+        }
+
+        .modal-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .modal-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-green-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .modal-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-green-dark));
+            border: none;
+            border-radius: 16px;
+            color: var(--bg-primary);
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 210, 106, 0.4);
+        }
+
+        /* Confetti Canvas */
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1999;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .session-item {
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .day-card.today {
+            animation: pulse 2s ease infinite;
+        }
+
+        .session-item:nth-child(1) { animation-delay: 0.05s; }
+        .session-item:nth-child(2) { animation-delay: 0.1s; }
+        .session-item:nth-child(3) { animation-delay: 0.15s; }
+        .session-item:nth-child(4) { animation-delay: 0.2s; }
+        .session-item:nth-child(5) { animation-delay: 0.25s; }
+        .session-item:nth-child(6) { animation-delay: 0.3s; }
+        .session-item:nth-child(7) { animation-delay: 0.35s; }
+        .session-item:nth-child(8) { animation-delay: 0.4s; }
+        .session-item:nth-child(9) { animation-delay: 0.45s; }
+        .session-item:nth-child(10) { animation-delay: 0.5s; }
+    </style>
+</head>
+<body>
+    <!-- Confetti Canvas -->
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- Setup Screen -->
+    <div class="setup-screen" id="setupScreen">
+        <div class="setup-logo">
+            <img src="assets/quran-icon.png" alt="Quran Icon">
+        </div>
+        <h1 class="setup-title">Alka Qur'an Tracker</h1>
+        <p class="setup-subtitle">Jadwal Khatam Qur'an Fleksibel</p>
+        
+        <div class="setup-form">
+            <div class="input-group">
+                <label class="input-label">Tanggal Mulai</label>
+                <input type="date" class="date-input" id="startDateInput">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Target Khatam</label>
+                <select class="select-input" id="durationSelect">
+                    <option value="30">30 Hari (10 sesi/hari)</option>
+                    <option value="40">40 Hari (7-8 sesi/hari)</option>
+                    <option value="60" selected>60 Hari (5 sesi/hari)</option>
+                </select>
+            </div>
+            <button class="start-btn" id="startBtn" disabled>Mulai Perjalanan</button>
+        </div>
+
+        <div class="brand-logo-bottom">
+            <img src="assets/brand-logo.png" alt="Alka Brand">
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="main-app" id="mainApp">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-top">
+                <div class="header-logo">
+                    <div class="header-icon">
+                        <img src="assets/quran-icon.png" alt="Quran Icon">
+                    </div>
+                    <span class="header-title">Alka Qur'an Tracker</span>
+                </div>
+                <div class="header-progress">
+                    <div class="progress-circle" id="progressCircle" style="--progress: 0%">
+                        <span class="progress-text" id="progressText">0%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="date-info">
+                <div class="date-info-item">
+                    <span class="date-info-label">Mulai</span>
+                    <span class="date-info-value" id="startDateDisplay">-</span>
+                </div>
+                <div class="date-info-item">
+                    <span class="date-info-label">Estimasi Selesai</span>
+                    <span class="date-info-value" id="endDateDisplay">-</span>
+                </div>
+                <div class="date-info-item">
+                    <span class="date-info-label">Sisa Hari</span>
+                    <span class="date-info-value" id="daysLeftDisplay">-</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Horizontal Calendar -->
+        <section class="calendar-section">
+            <div class="calendar-header">
+                <h2 class="calendar-title" id="calendarTitle">Jadwal 60 Hari</h2>
+                <div class="calendar-nav">
+                    <button class="nav-btn" id="scrollLeft">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <button class="nav-btn" id="scrollRight">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="calendar-scroll" id="calendarScroll">
+                <!-- Days will be generated by JS -->
+            </div>
+        </section>
+
+        <!-- Session Details Panel -->
+        <section class="session-panel" id="sessionPanel">
+            <div class="empty-state" id="emptyState">
+                <div class="empty-state-icon">
+                    <img src="assets/quran-icon.png" alt="Quran Icon">
+                </div>
+                <p class="empty-state-text">Pilih tanggal untuk melihat jadwal bacaan</p>
+            </div>
+            <div id="sessionContent" style="display: none;">
+                <div class="session-panel-header">
+                    <div>
+                        <h3 class="session-panel-title" id="panelTitle">Day 1</h3>
+                        <p class="session-panel-subtitle" id="panelSubtitle">5 sesi membaca</p>
+                    </div>
+                    <div class="session-stats">
+                        <div class="session-stat">
+                            <div class="session-stat-value" id="completedCount">0/5</div>
+                            <div class="session-stat-label">Selesai</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="session-list" id="sessionList">
+                    <!-- Sessions will be generated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Floating Action Buttons -->
+        <div class="fab-container">
+            <a href="https://alkablogz.myr.id/support" target="_blank" class="fab-btn fab-donate" title="Donate">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+            </a>
+            <button class="fab-btn fab-reset" id="resetBtn" title="Reset">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="successModal">
+        <div class="modal-content">
+            <div class="modal-icon">
+                <img src="assets/quran-icon.png" alt="Success">
+            </div>
+            <h2 class="modal-title">Alhamdulillah!</h2>
+            <p class="modal-subtitle">Selamat! Anda telah menyelesaikan khatam Al-Qur'an. Semoga Allah menerima amal ibadah kita semua.</p>
+            <button class="modal-btn" id="closeModalBtn">Tutup</button>
+        </div>
+    </div>
+
+    <script>
+        // Complete Quran reading schedule data (60 days x 5 sessions = 300 sessions total)
+        // This covers the entire Quran (604 pages)
+        const quranSchedule = [
+            // Day 1
+            { day: 1, sessions: [
+                { pages: "1-2", reading: "<span class='surah-name'>Al-Fatihah</span> (1) - <span class='surah-name'>Al-Baqarah</span> (5)" },
+                { pages: "3-4", reading: "<span class='surah-name'>Al-Baqarah</span> (6) - (24)" },
+                { pages: "5-6", reading: "<span class='surah-name'>Al-Baqarah</span> (25) - (37)" },
+                { pages: "7-8", reading: "<span class='surah-name'>Al-Baqarah</span> (38) - (57)" },
+                { pages: "9-10", reading: "<span class='surah-name'>Al-Baqarah</span> (58) - (69)" }
+            ]},
+            // Day 2
+            { day: 2, sessions: [
+                { pages: "11-12", reading: "<span class='surah-name'>Al-Baqarah</span> (70) - (83)" },
+                { pages: "13-14", reading: "<span class='surah-name'>Al-Baqarah</span> (84) - (93)" },
+                { pages: "15-16", reading: "<span class='surah-name'>Al-Baqarah</span> (94) - (105)" },
+                { pages: "17-18", reading: "<span class='surah-name'>Al-Baqarah</span> (106) - (126)" },
+                { pages: "19-20", reading: "<span class='surah-name'>Al-Baqarah</span> (127) - (141)" }
+            ]},
+            // Day 3
+            { day: 3, sessions: [
+                { pages: "21-22", reading: "<span class='surah-name'>Al-Baqarah</span> (142) - (153)" },
+                { pages: "23-24", reading: "<span class='surah-name'>Al-Baqarah</span> (154) - (163)" },
+                { pages: "25-26", reading: "<span class='surah-name'>Al-Baqarah</span> (164) - (176)" },
+                { pages: "27-28", reading: "<span class='surah-name'>Al-Baqarah</span> (177) - (186)" },
+                { pages: "29-30", reading: "<span class='surah-name'>Al-Baqarah</span> (187) - (196)" }
+            ]},
+            // Day 4
+            { day: 4, sessions: [
+                { pages: "31-32", reading: "<span class='surah-name'>Al-Baqarah</span> (197) - (202)" },
+                { pages: "33-34", reading: "<span class='surah-name'>Al-Baqarah</span> (203) - (210)" },
+                { pages: "35-36", reading: "<span class='surah-name'>Al-Baqarah</span> (211) - (215)" },
+                { pages: "37-38", reading: "<span class='surah-name'>Al-Baqarah</span> (216) - (219)" },
+                { pages: "39-40", reading: "<span class='surah-name'>Al-Baqarah</span> (220) - (224)" }
+            ]},
+            // Day 5
+            { day: 5, sessions: [
+                { pages: "41-42", reading: "<span class='surah-name'>Al-Baqarah</span> (225) - (233)" },
+                { pages: "43-44", reading: "<span class='surah-name'>Al-Baqarah</span> (234) - (248)" },
+                { pages: "45-46", reading: "<span class='surah-name'>Al-Baqarah</span> (249) - (256)" },
+                { pages: "47-48", reading: "<span class='surah-name'>Al-Baqarah</span> (257) - (269)" },
+                { pages: "49-50", reading: "<span class='surah-name'>Al-Baqarah</span> (270) - <span class='surah-name'>Ali 'Imran</span> (9)" }
+            ]},
+            // Day 6
+            { day: 6, sessions: [
+                { pages: "51-52", reading: "<span class='surah-name'>Ali 'Imran</span> (10) - (22)" },
+                { pages: "53-54", reading: "<span class='surah-name'>Ali 'Imran</span> (23) - (37)" },
+                { pages: "55-56", reading: "<span class='surah-name'>Ali 'Imran</span> (38) - (52)" },
+                { pages: "57-58", reading: "<span class='surah-name'>Ali 'Imran</span> (53) - (70)" },
+                { pages: "59-60", reading: "<span class='surah-name'>Ali 'Imran</span> (71) - (83)" }
+            ]},
+            // Day 7
+            { day: 7, sessions: [
+                { pages: "61-62", reading: "<span class='surah-name'>Ali 'Imran</span> (84) - (100)" },
+                { pages: "63-64", reading: "<span class='surah-name'>Ali 'Imran</span> (101) - (115)" },
+                { pages: "65-66", reading: "<span class='surah-name'>Ali 'Imran</span> (116) - (132)" },
+                { pages: "67-68", reading: "<span class='surah-name'>Ali 'Imran</span> (133) - (148)" },
+                { pages: "69-70", reading: "<span class='surah-name'>Ali 'Imran</span> (149) - (165)" }
+            ]},
+            // Day 8
+            { day: 8, sessions: [
+                { pages: "71-72", reading: "<span class='surah-name'>Ali 'Imran</span> (166) - (180)" },
+                { pages: "73-74", reading: "<span class='surah-name'>Ali 'Imran</span> (181) - (194)" },
+                { pages: "75-76", reading: "<span class='surah-name'>Ali 'Imran</span> (195) - <span class='surah-name'>An-Nisa</span> (6)" },
+                { pages: "77-78", reading: "<span class='surah-name'>An-Nisa</span> (7) - (14)" },
+                { pages: "79-80", reading: "<span class='surah-name'>An-Nisa</span> (15) - (23)" }
+            ]},
+            // Day 9
+            { day: 9, sessions: [
+                { pages: "81-82", reading: "<span class='surah-name'>An-Nisa</span> (24) - (37)" },
+                { pages: "83-84", reading: "<span class='surah-name'>An-Nisa</span> (38) - (59)" },
+                { pages: "85-86", reading: "<span class='surah-name'>An-Nisa</span> (60) - (74)" },
+                { pages: "87-88", reading: "<span class='surah-name'>An-Nisa</span> (75) - (86)" },
+                { pages: "89-90", reading: "<span class='surah-name'>An-Nisa</span> (87) - (101)" }
+            ]},
+            // Day 10
+            { day: 10, sessions: [
+                { pages: "91-92", reading: "<span class='surah-name'>An-Nisa</span> (102) - (113)" },
+                { pages: "93-94", reading: "<span class='surah-name'>An-Nisa</span> (114) - (134)" },
+                { pages: "95-96", reading: "<span class='surah-name'>An-Nisa</span> (135) - (147)" },
+                { pages: "97-98", reading: "<span class='surah-name'>An-Nisa</span> (148) - (162)" },
+                { pages: "99-100", reading: "<span class='surah-name'>An-Nisa</span> (163) - (176)" }
+            ]},
+            // Day 11
+            { day: 11, sessions: [
+                { pages: "101-102", reading: "<span class='surah-name'>An-Nisa</span> (148) - (162)" },
+                { pages: "103-104", reading: "<span class='surah-name'>An-Nisa</span> (163) - (175)" },
+                { pages: "105-106", reading: "<span class='surah-name'>An-Nisa</span> (176) - <span class='surah-name'>Al-Ma'idah</span> (5)" },
+                { pages: "107-108", reading: "<span class='surah-name'>Al-Ma'idah</span> (6) - (13)" },
+                { pages: "109-110", reading: "<span class='surah-name'>Al-Ma'idah</span> (14) - (26)" }
+            ]},
+            // Day 12
+            { day: 12, sessions: [
+                { pages: "111-112", reading: "<span class='surah-name'>Al-Ma'idah</span> (27) - (36)" },
+                { pages: "113-114", reading: "<span class='surah-name'>Al-Ma'idah</span> (37) - (45)" },
+                { pages: "115-116", reading: "<span class='surah-name'>Al-Ma'idah</span> (46) - (57)" },
+                { pages: "117-118", reading: "<span class='surah-name'>Al-Ma'idah</span> (58) - (70)" },
+                { pages: "119-120", reading: "<span class='surah-name'>Al-Ma'idah</span> (71) - (82)" }
+            ]},
+            // Day 13
+            { day: 13, sessions: [
+                { pages: "121-122", reading: "<span class='surah-name'>Al-Ma'idah</span> (83) - (95)" },
+                { pages: "123-124", reading: "<span class='surah-name'>Al-Ma'idah</span> (96) - (108)" },
+                { pages: "125-126", reading: "<span class='surah-name'>Al-Ma'idah</span> (109) - (120)" },
+                { pages: "127-128", reading: "<span class='surah-name'>Al-Ma'idah</span> (End) - <span class='surah-name'>Al-An'am</span> (18)" },
+                { pages: "129-130", reading: "<span class='surah-name'>Al-An'am</span> (19) - (35)" }
+            ]},
+            // Day 14
+            { day: 14, sessions: [
+                { pages: "131-132", reading: "<span class='surah-name'>Al-An'am</span> (36) - (52)" },
+                { pages: "133-134", reading: "<span class='surah-name'>Al-An'am</span> (53) - (68)" },
+                { pages: "135-136", reading: "<span class='surah-name'>Al-An'am</span> (69) - (81)" },
+                { pages: "137-138", reading: "<span class='surah-name'>Al-An'am</span> (82) - (94)" },
+                { pages: "139-140", reading: "<span class='surah-name'>Al-An'am</span> (95) - (110)" }
+            ]},
+            // Day 15
+            { day: 15, sessions: [
+                { pages: "141-142", reading: "<span class='surah-name'>Al-An'am</span> (111) - (124)" },
+                { pages: "143-144", reading: "<span class='surah-name'>Al-An'am</span> (125) - (137)" },
+                { pages: "145-146", reading: "<span class='surah-name'>Al-An'am</span> (138) - (146)" },
+                { pages: "147-148", reading: "<span class='surah-name'>Al-An'am</span> (147) - (157)" },
+                { pages: "149-150", reading: "<span class='surah-name'>Al-An'am</span> (158) - <span class='surah-name'>Al-A'raf</span> (11)" }
+            ]},
+            // Day 16
+            { day: 16, sessions: [
+                { pages: "151-152", reading: "<span class='surah-name'>Al-A'raf</span> (12) - (30)" },
+                { pages: "153-154", reading: "<span class='surah-name'>Al-A'raf</span> (31) - (43)" },
+                { pages: "155-156", reading: "<span class='surah-name'>Al-A'raf</span> (44) - (57)" },
+                { pages: "157-158", reading: "<span class='surah-name'>Al-A'raf</span> (58) - (73)" },
+                { pages: "159-160", reading: "<span class='surah-name'>Al-A'raf</span> (74) - (87)" }
+            ]},
+            // Day 17
+            { day: 17, sessions: [
+                { pages: "161-162", reading: "<span class='surah-name'>Al-A'raf</span> (88) - (104)" },
+                { pages: "163-164", reading: "<span class='surah-name'>Al-A'raf</span> (105) - (130)" },
+                { pages: "165-166", reading: "<span class='surah-name'>Al-A'raf</span> (131) - (141)" },
+                { pages: "167-168", reading: "<span class='surah-name'>Al-A'raf</span> (142) - (149)" },
+                { pages: "169-170", reading: "<span class='surah-name'>Al-A'raf</span> (150) - (159)" }
+            ]},
+            // Day 18
+            { day: 18, sessions: [
+                { pages: "171-172", reading: "<span class='surah-name'>Al-A'raf</span> (160) - (170)" },
+                { pages: "173-174", reading: "<span class='surah-name'>Al-A'raf</span> (171) - (187)" },
+                { pages: "175-176", reading: "<span class='surah-name'>Al-A'raf</span> (188) - (206)" },
+                { pages: "177-178", reading: "<span class='surah-name'>Al-Anfal</span> (1) - (16)" },
+                { pages: "179-180", reading: "<span class='surah-name'>Al-Anfal</span> (17) - (33)" }
+            ]},
+            // Day 19
+            { day: 19, sessions: [
+                { pages: "181-182", reading: "<span class='surah-name'>Al-Anfal</span> (34) - (45)" },
+                { pages: "183-184", reading: "<span class='surah-name'>Al-Anfal</span> (46) - (61)" },
+                { pages: "185-186", reading: "<span class='surah-name'>Al-Anfal</span> (62) - (75)" },
+                { pages: "187-188", reading: "<span class='surah-name'>At-Tawbah</span> (1) - (13)" },
+                { pages: "189-190", reading: "<span class='surah-name'>At-Tawbah</span> (14) - (26)" }
+            ]},
+            // Day 20
+            { day: 20, sessions: [
+                { pages: "191-192", reading: "<span class='surah-name'>At-Tawbah</span> (27) - (40)" },
+                { pages: "193-194", reading: "<span class='surah-name'>At-Tawbah</span> (41) - (54)" },
+                { pages: "195-196", reading: "<span class='surah-name'>At-Tawbah</span> (55) - (68)" },
+                { pages: "197-198", reading: "<span class='surah-name'>At-Tawbah</span> (69) - (79)" },
+                { pages: "199-200", reading: "<span class='surah-name'>At-Tawbah</span> (80) - (93)" }
+            ]},
+            // Day 21
+            { day: 21, sessions: [
+                { pages: "201-202", reading: "<span class='surah-name'>At-Tawbah</span> (94) - (106)" },
+                { pages: "203-204", reading: "<span class='surah-name'>At-Tawbah</span> (107) - (117)" },
+                { pages: "205-206", reading: "<span class='surah-name'>At-Tawbah</span> (118) - (129)" },
+                { pages: "207-208", reading: "<span class='surah-name'>Yunus</span> (1) - (14)" },
+                { pages: "209-210", reading: "<span class='surah-name'>Yunus</span> (15) - (25)" }
+            ]},
+            // Day 22
+            { day: 22, sessions: [
+                { pages: "211-212", reading: "<span class='surah-name'>Yunus</span> (26) - (42)" },
+                { pages: "213-214", reading: "<span class='surah-name'>Yunus</span> (43) - (61)" },
+                { pages: "215-216", reading: "<span class='surah-name'>Yunus</span> (62) - (78)" },
+                { pages: "217-218", reading: "<span class='surah-name'>Yunus</span> (79) - (97)" },
+                { pages: "219-220", reading: "<span class='surah-name'>Yunus</span> (98) - (109)" }
+            ]},
+            // Day 23
+            { day: 23, sessions: [
+                { pages: "221-222", reading: "<span class='surah-name'>Hud</span> (1) - (12)" },
+                { pages: "223-224", reading: "<span class='surah-name'>Hud</span> (13) - (28)" },
+                { pages: "225-226", reading: "<span class='surah-name'>Hud</span> (29) - (45)" },
+                { pages: "227-228", reading: "<span class='surah-name'>Hud</span> (46) - (62)" },
+                { pages: "229-230", reading: "<span class='surah-name'>Hud</span> (63) - (81)" }
+            ]},
+            // Day 24
+            { day: 24, sessions: [
+                { pages: "231-232", reading: "<span class='surah-name'>Hud</span> (82) - (97)" },
+                { pages: "233-234", reading: "<span class='surah-name'>Hud</span> (98) - (117)" },
+                { pages: "235-236", reading: "<span class='surah-name'>Hud</span> (118) - <span class='surah-name'>Yusuf</span> (6)" },
+                { pages: "237-238", reading: "<span class='surah-name'>Yusuf</span> (7) - (22)" },
+                { pages: "239-240", reading: "<span class='surah-name'>Yusuf</span> (23) - (37)" }
+            ]},
+            // Day 25
+            { day: 25, sessions: [
+                { pages: "241-242", reading: "<span class='surah-name'>Yusuf</span> (38) - (52)" },
+                { pages: "243-244", reading: "<span class='surah-name'>Yusuf</span> (53) - (78)" },
+                { pages: "245-246", reading: "<span class='surah-name'>Yusuf</span> (79) - (95)" },
+                { pages: "247-248", reading: "<span class='surah-name'>Yusuf</span> (96) - (111)" },
+                { pages: "249-250", reading: "<span class='surah-name'>Ar-Ra'd</span> (1) - (13)" }
+            ]},
+            // Day 26
+            { day: 26, sessions: [
+                { pages: "251-252", reading: "<span class='surah-name'>Ar-Ra'd</span> (14) - (28)" },
+                { pages: "253-254", reading: "<span class='surah-name'>Ar-Ra'd</span> (29) - (43)" },
+                { pages: "255-256", reading: "<span class='surah-name'>Ibrahim</span> (1) - (10)" },
+                { pages: "257-258", reading: "<span class='surah-name'>Ibrahim</span> (11) - (24)" },
+                { pages: "259-260", reading: "<span class='surah-name'>Ibrahim</span> (25) - (33)" }
+            ]},
+            // Day 27
+            { day: 27, sessions: [
+                { pages: "261-262", reading: "<span class='surah-name'>Ibrahim</span> (34) - <span class='surah-name'>Al-Hijr</span> (15)" },
+                { pages: "263-264", reading: "<span class='surah-name'>Al-Hijr</span> (16) - (51)" },
+                { pages: "265-266", reading: "<span class='surah-name'>Al-Hijr</span> (52) - (99)" },
+                { pages: "267-268", reading: "<span class='surah-name'>An-Nahl</span> (1) - (14)" },
+                { pages: "269-270", reading: "<span class='surah-name'>An-Nahl</span> (15) - (34)" }
+            ]},
+            // Day 28
+            { day: 28, sessions: [
+                { pages: "271-272", reading: "<span class='surah-name'>An-Nahl</span> (35) - (54)" },
+                { pages: "273-274", reading: "<span class='surah-name'>An-Nahl</span> (55) - (72)" },
+                { pages: "275-276", reading: "<span class='surah-name'>An-Nahl</span> (73) - (87)" },
+                { pages: "277-278", reading: "<span class='surah-name'>An-Nahl</span> (88) - (102)" },
+                { pages: "279-280", reading: "<span class='surah-name'>An-Nahl</span> (103) - (118)" }
+            ]},
+            // Day 29
+            { day: 29, sessions: [
+                { pages: "281-282", reading: "<span class='surah-name'>An-Nahl</span> (119) - <span class='surah-name'>Al-Isra'</span> (7)" },
+                { pages: "283-284", reading: "<span class='surah-name'>Al-Isra'</span> (8) - (27)" },
+                { pages: "285-286", reading: "<span class='surah-name'>Al-Isra'</span> (28) - (49)" },
+                { pages: "287-288", reading: "<span class='surah-name'>Al-Isra'</span> (50) - (66)" },
+                { pages: "289-290", reading: "<span class='surah-name'>Al-Isra'</span> (67) - (86)" }
+            ]},
+            // Day 30
+            { day: 30, sessions: [
+                { pages: "291-292", reading: "<span class='surah-name'>Al-Isra'</span> (87) - (111)" },
+                { pages: "293-294", reading: "<span class='surah-name'>Al-Kahf</span> (1) - (15)" },
+                { pages: "295-296", reading: "<span class='surah-name'>Al-Kahf</span> (16) - (26)" },
+                { pages: "297-298", reading: "<span class='surah-name'>Al-Kahf</span> (27) - (45)" },
+                { pages: "299-300", reading: "<span class='surah-name'>Al-Kahf</span> (46) - (53)" }
+            ]},
+            // Day 31
+            { day: 31, sessions: [
+                { pages: "301-302", reading: "<span class='surah-name'>Al-Kahf</span> (54) - (74)" },
+                { pages: "303-304", reading: "<span class='surah-name'>Al-Kahf</span> (75) - (110 - Selesai)" },
+                { pages: "305-306", reading: "<span class='surah-name'>Maryam</span> (1) - (38)" },
+                { pages: "307-308", reading: "<span class='surah-name'>Maryam</span> (39) - (64)" },
+                { pages: "309-310", reading: "<span class='surah-name'>Maryam</span> (65) - (95)" }
+            ]},
+            // Day 32
+            { day: 32, sessions: [
+                { pages: "311-312", reading: "<span class='surah-name'>Maryam</span> (96) - <span class='surah-name'>Ta-Ha</span> (12)" },
+                { pages: "313-314", reading: "<span class='surah-name'>Ta-Ha</span> (13) - (54)" },
+                { pages: "315-316", reading: "<span class='surah-name'>Ta-Ha</span> (55) - (82)" },
+                { pages: "317-318", reading: "<span class='surah-name'>Ta-Ha</span> (83) - (113)" },
+                { pages: "319-320", reading: "<span class='surah-name'>Ta-Ha</span> (114) - (135 - Selesai)" }
+            ]},
+            // Day 33
+            { day: 33, sessions: [
+                { pages: "321-322", reading: "<span class='surah-name'>Ta-Ha</span> (Akhir) - <span class='surah-name'>Al-Anbiya'</span> (10)" },
+                { pages: "323-324", reading: "<span class='surah-name'>Al-Anbiya'</span> (11) - (35)" },
+                { pages: "325-326", reading: "<span class='surah-name'>Al-Anbiya'</span> (36) - (57)" },
+                { pages: "327-328", reading: "<span class='surah-name'>Al-Anbiya'</span> (58) - (81)" },
+                { pages: "329-330", reading: "<span class='surah-name'>Al-Anbiya'</span> (82) - (112 - Selesai)" }
+            ]},
+            // Day 34
+            { day: 34, sessions: [
+                { pages: "331-332", reading: "<span class='surah-name'>Al-Anbiya'</span> (Akhir) - <span class='surah-name'>Al-Hajj</span> (5)" },
+                { pages: "333-334", reading: "<span class='surah-name'>Al-Hajj</span> (6) - (23)" },
+                { pages: "335-336", reading: "<span class='surah-name'>Al-Hajj</span> (24) - (46)" },
+                { pages: "337-338", reading: "<span class='surah-name'>Al-Hajj</span> (47) - (64)" },
+                { pages: "339-340", reading: "<span class='surah-name'>Al-Hajj</span> (65) - (78 - Selesai)" }
+            ]},
+            // Day 35
+            { day: 35, sessions: [
+                { pages: "341-342", reading: "<span class='surah-name'>Al-Mu'minun</span> (1) - (27)" },
+                { pages: "343-344", reading: "<span class='surah-name'>Al-Mu'minun</span> (28) - (59)" },
+                { pages: "345-346", reading: "<span class='surah-name'>Al-Mu'minun</span> (60) - (89)" },
+                { pages: "347-348", reading: "<span class='surah-name'>Al-Mu'minun</span> (90) - (118 - Selesai)" },
+                { pages: "349-350", reading: "<span class='surah-name'>An-Nur</span> (1) - (10)" }
+            ]},
+            // Day 36
+            { day: 36, sessions: [
+                { pages: "351-352", reading: "<span class='surah-name'>An-Nur</span> (11) - (27)" },
+                { pages: "353-354", reading: "<span class='surah-name'>An-Nur</span> (28) - (36)" },
+                { pages: "355-356", reading: "<span class='surah-name'>An-Nur</span> (37) - (53)" },
+                { pages: "357-358", reading: "<span class='surah-name'>An-Nur</span> (54) - (64 - Selesai)" },
+                { pages: "359-360", reading: "<span class='surah-name'>Al-Furqan</span> (1) - (11)" }
+            ]},
+            // Day 37
+            { day: 37, sessions: [
+                { pages: "361-362", reading: "<span class='surah-name'>Al-Furqan</span> (12) - (32)" },
+                { pages: "363-364", reading: "<span class='surah-name'>Al-Furqan</span> (33) - (55)" },
+                { pages: "365-366", reading: "<span class='surah-name'>Al-Furqan</span> (56) - <span class='surah-name'>Asy-Syu'ara'</span> (11)" },
+                { pages: "367-368", reading: "<span class='surah-name'>Asy-Syu'ara'</span> (12) - (69)" },
+                { pages: "369-370", reading: "<span class='surah-name'>Asy-Syu'ara'</span> (70) - (111)" }
+            ]},
+            // Day 38
+            { day: 38, sessions: [
+                { pages: "371-372", reading: "<span class='surah-name'>Asy-Syu'ara'</span> (112) - (159)" },
+                { pages: "373-374", reading: "<span class='surah-name'>Asy-Syu'ara'</span> (160) - (227 - Selesai)" },
+                { pages: "375-376", reading: "<span class='surah-name'>An-Naml</span> (1) - (13)" },
+                { pages: "377-378", reading: "<span class='surah-name'>An-Naml</span> (14) - (35)" },
+                { pages: "379-380", reading: "<span class='surah-name'>An-Naml</span> (36) - (55)" }
+            ]},
+            // Day 39
+            { day: 39, sessions: [
+                { pages: "381-382", reading: "<span class='surah-name'>An-Naml</span> (56) - (76)" },
+                { pages: "383-384", reading: "<span class='surah-name'>An-Naml</span> (77) - (93 - Selesai)" },
+                { pages: "385-386", reading: "<span class='surah-name'>Al-Qashas</span> (1) - (13)" },
+                { pages: "387-388", reading: "<span class='surah-name'>Al-Qashas</span> (14) - (28)" },
+                { pages: "389-390", reading: "<span class='surah-name'>Al-Qashas</span> (29) - (50)" }
+            ]},
+            // Day 40
+            { day: 40, sessions: [
+                { pages: "391-392", reading: "<span class='surah-name'>Al-Qashas</span> (51) - (70)" },
+                { pages: "393-394", reading: "<span class='surah-name'>Al-Qashas</span> (71) - (88 - Selesai)" },
+                { pages: "395-396", reading: "<span class='surah-name'>Al-'Ankabut</span> (1) - (6)" },
+                { pages: "397-398", reading: "<span class='surah-name'>Al-'Ankabut</span> (7) - (23)" },
+                { pages: "399-400", reading: "<span class='surah-name'>Al-'Ankabut</span> (24) - (38)" }
+            ]},
+            // Day 41
+            { day: 41, sessions: [
+                { pages: "401-402", reading: "<span class='surah-name'>Al-'Ankabut</span> (39) - (52)" },
+                { pages: "403-404", reading: "<span class='surah-name'>Al-'Ankabut</span> (53) - <span class='surah-name'>Ar-Rum</span> (5)" },
+                { pages: "405-406", reading: "<span class='surah-name'>Ar-Rum</span> (6) - (24)" },
+                { pages: "407-408", reading: "<span class='surah-name'>Ar-Rum</span> (25) - (41)" },
+                { pages: "409-410", reading: "<span class='surah-name'>Ar-Rum</span> (42) - (60 - Selesai)" }
+            ]},
+            // Day 42
+            { day: 42, sessions: [
+                { pages: "411-412", reading: "<span class='surah-name'>Luqman</span> (1) - (22)" },
+                { pages: "413-414", reading: "<span class='surah-name'>Luqman</span> (23) - <span class='surah-name'>As-Sajdah</span> (11)" },
+                { pages: "415-416", reading: "<span class='surah-name'>As-Sajdah</span> (12) - <span class='surah-name'>Al-Ahzab</span> (6)" },
+                { pages: "417-418", reading: "<span class='surah-name'>Al-Ahzab</span> (7) - (22)" },
+                { pages: "419-420", reading: "<span class='surah-name'>Al-Ahzab</span> (23) - (35)" }
+            ]},
+            // Day 43
+            { day: 43, sessions: [
+                { pages: "421-422", reading: "<span class='surah-name'>Al-Ahzab</span> (36) - (50)" },
+                { pages: "423-424", reading: "<span class='surah-name'>Al-Ahzab</span> (51) - (62)" },
+                { pages: "425-426", reading: "<span class='surah-name'>Al-Ahzab</span> (63) - <span class='surah-name'>Saba'</span> (7)" },
+                { pages: "427-428", reading: "<span class='surah-name'>Saba'</span> (8) - (22)" },
+                { pages: "429-430", reading: "<span class='surah-name'>Saba'</span> (23) - (39)" }
+            ]},
+            // Day 44
+            { day: 44, sessions: [
+                { pages: "431-432", reading: "<span class='surah-name'>Saba'</span> (40) - <span class='surah-name'>Fatir</span> (3)" },
+                { pages: "433-434", reading: "<span class='surah-name'>Fatir</span> (4) - (18)" },
+                { pages: "435-436", reading: "<span class='surah-name'>Fatir</span> (19) - (38)" },
+                { pages: "437-438", reading: "<span class='surah-name'>Fatir</span> (39) - <span class='surah-name'>Ya-Sin</span> (12)" },
+                { pages: "439-440", reading: "<span class='surah-name'>Ya-Sin</span> (13) - (40)" }
+            ]},
+            // Day 45
+            { day: 45, sessions: [
+                { pages: "441-442", reading: "<span class='surah-name'>Ya-Sin</span> (41) - (70)" },
+                { pages: "443-444", reading: "<span class='surah-name'>Ya-Sin</span> (71) - <span class='surah-name'>As-Saffat</span> (24)" },
+                { pages: "445-446", reading: "<span class='surah-name'>As-Saffat</span> (25) - (76)" },
+                { pages: "447-448", reading: "<span class='surah-name'>As-Saffat</span> (77) - (126)" },
+                { pages: "449-450", reading: "<span class='surah-name'>As-Saffat</span> (127) - <span class='surah-name'>Sad</span> (12)" }
+            ]},
+            // Day 46
+            { day: 46, sessions: [
+                { pages: "451-452", reading: "<span class='surah-name'>Sad</span> (13) - (42)" },
+                { pages: "453-454", reading: "<span class='surah-name'>Sad</span> (43) - (83)" },
+                { pages: "455-456", reading: "<span class='surah-name'>Sad</span> (84) - <span class='surah-name'>Az-Zumar</span> (10)" },
+                { pages: "457-458", reading: "<span class='surah-name'>Az-Zumar</span> (11) - (31)" },
+                { pages: "459-460", reading: "<span class='surah-name'>Az-Zumar</span> (32) - (47)" }
+            ]},
+            // Day 47
+            { day: 47, sessions: [
+                { pages: "461-462", reading: "<span class='surah-name'>Az-Zumar</span> (48) - (67)" },
+                { pages: "463-464", reading: "<span class='surah-name'>Az-Zumar</span> (68) - <span class='surah-name'>Ghafir</span> (7)" },
+                { pages: "465-466", reading: "<span class='surah-name'>Ghafir</span> (8) - (25)" },
+                { pages: "467-468", reading: "<span class='surah-name'>Ghafir</span> (26) - (40)" },
+                { pages: "469-470", reading: "<span class='surah-name'>Ghafir</span> (41) - (58)" }
+            ]},
+            // Day 48
+            { day: 48, sessions: [
+                { pages: "471-472", reading: "<span class='surah-name'>Ghafir</span> (59) - (77)" },
+                { pages: "473-474", reading: "<span class='surah-name'>Ghafir</span> (78) - <span class='surah-name'>Fussilat</span> (11)" },
+                { pages: "475-476", reading: "<span class='surah-name'>Fussilat</span> (12) - (29)" },
+                { pages: "477-478", reading: "<span class='surah-name'>Fussilat</span> (30) - (46)" },
+                { pages: "479-480", reading: "<span class='surah-name'>Fussilat</span> (47) - <span class='surah-name'>Ash-Shura</span> (10)" }
+            ]},
+            // Day 49
+            { day: 49, sessions: [
+                { pages: "481-482", reading: "<span class='surah-name'>Ash-Shura</span> (11) - (22)" },
+                { pages: "483-484", reading: "<span class='surah-name'>Ash-Shura</span> (23) - (31)" },
+                { pages: "485-486", reading: "<span class='surah-name'>Ash-Shura</span> (32) - (51)" },
+                { pages: "487-488", reading: "<span class='surah-name'>Ash-Shura</span> (52) - <span class='surah-name'>Az-Zukhruf</span> (22)" },
+                { pages: "489-490", reading: "<span class='surah-name'>Az-Zukhruf</span> (23) - (47)" }
+            ]},
+            // Day 50
+            { day: 50, sessions: [
+                { pages: "491-492", reading: "<span class='surah-name'>Az-Zukhruf</span> (48) - (73)" },
+                { pages: "493-494", reading: "<span class='surah-name'>Az-Zukhruf</span> (74) - <span class='surah-name'>Ad-Dukhan</span> (18)" },
+                { pages: "495-496", reading: "<span class='surah-name'>Ad-Dukhan</span> (19) - (50)" },
+                { pages: "497-498", reading: "<span class='surah-name'>Ad-Dukhan</span> (51) - <span class='surah-name'>Al-Jathiyah</span> (13)" },
+                { pages: "499-500", reading: "<span class='surah-name'>Al-Jathiyah</span> (14) - (32)" }
+            ]},
+            // Day 51
+            { day: 51, sessions: [
+                { pages: "501-502", reading: "<span class='surah-name'>Al-Jathiyah</span> (33) - <span class='surah-name'>Al-Ahqaf</span> (5)" },
+                { pages: "503-504", reading: "<span class='surah-name'>Al-Ahqaf</span> (6) - (20)" },
+                { pages: "505-506", reading: "<span class='surah-name'>Al-Ahqaf</span> (21) - <span class='surah-name'>Muhammad</span> (4)" },
+                { pages: "507-508", reading: "<span class='surah-name'>Muhammad</span> (5) - (19)" },
+                { pages: "509-510", reading: "<span class='surah-name'>Muhammad</span> (20) - (38 - Selesai)" }
+            ]},
+            // Day 52
+            { day: 52, sessions: [
+                { pages: "511-512", reading: "<span class='surah-name'>Al-Fath</span> (1) - (15)" },
+                { pages: "513-514", reading: "<span class='surah-name'>Al-Fath</span> (16) - (28)" },
+                { pages: "515-516", reading: "<span class='surah-name'>Al-Fath</span> (29) - <span class='surah-name'>Al-Hujurat</span> (11)" },
+                { pages: "517-518", reading: "<span class='surah-name'>Al-Hujurat</span> (12) - <span class='surah-name'>Qaf</span> (15)" },
+                { pages: "519-520", reading: "<span class='surah-name'>Qaf</span> (16) - <span class='surah-name'>Adh-Dhariyat</span> (6)" }
+            ]},
+            // Day 53
+            { day: 53, sessions: [
+                { pages: "521-522", reading: "<span class='surah-name'>Adh-Dhariyat</span> (7) - (51)" },
+                { pages: "523-524", reading: "<span class='surah-name'>Adh-Dhariyat</span> (52) - <span class='surah-name'>At-Tur</span> (31)" },
+                { pages: "525-526", reading: "<span class='surah-name'>At-Tur</span> (32) - <span class='surah-name'>An-Najm</span> (44)" },
+                { pages: "527-528", reading: "<span class='surah-name'>An-Najm</span> (45) - <span class='surah-name'>Al-Qamar</span> (27)" },
+                { pages: "529-530", reading: "<span class='surah-name'>Al-Qamar</span> (28) - <span class='surah-name'>Ar-Rahman</span> (16)" }
+            ]},
+            // Day 54
+            { day: 54, sessions: [
+                { pages: "531-532", reading: "<span class='surah-name'>Ar-Rahman</span> (17) - (67)" },
+                { pages: "533-534", reading: "<span class='surah-name'>Ar-Rahman</span> (68) - <span class='surah-name'>Al-Waqi'ah</span> (50)" },
+                { pages: "535-536", reading: "<span class='surah-name'>Al-Waqi'ah</span> (51) - <span class='surah-name'>Al-Hadid</span> (3)" },
+                { pages: "537-538", reading: "<span class='surah-name'>Al-Hadid</span> (4) - (18)" },
+                { pages: "539-540", reading: "<span class='surah-name'>Al-Hadid</span> (19) - (24)" }
+            ]},
+            // Day 55
+            { day: 55, sessions: [
+                { pages: "541-542", reading: "<span class='surah-name'>Al-Hadid</span> (25) - <span class='surah-name'>Al-Mujadilah</span> (6)" },
+                { pages: "543-544", reading: "<span class='surah-name'>Al-Mujadilah</span> (7) - <span class='surah-name'>Al-Hashr</span> (3)" },
+                { pages: "545-546", reading: "<span class='surah-name'>Al-Hashr</span> (4) - (16)" },
+                { pages: "547-548", reading: "<span class='surah-name'>Al-Hashr</span> (17) - <span class='surah-name'>Al-Mumtahanah</span> (5)" },
+                { pages: "549-550", reading: "<span class='surah-name'>Al-Mumtahanah</span> (6) - <span class='surah-name'>As-Saff</span> (14 - Selesai)" }
+            ]},
+            // Day 56
+            { day: 56, sessions: [
+                { pages: "551-552", reading: "<span class='surah-name'>As-Saff</span> (End) - <span class='surah-name'>Al-Munafiqun</span> (4)" },
+                { pages: "553-554", reading: "<span class='surah-name'>Al-Munafiqun</span> (5) - <span class='surah-name'>At-Taghabun</span> (18 - Selesai)" },
+                { pages: "555-556", reading: "<span class='surah-name'>At-Talaq</span> (1) - (12 - Selesai)" },
+                { pages: "557-558", reading: "<span class='surah-name'>At-Tahrim</span> (1) - (12 - Selesai)" },
+                { pages: "559-560", reading: "<span class='surah-name'>Al-Mulk</span> (1) - (30 - Selesai)" }
+            ]},
+            // Day 57
+            { day: 57, sessions: [
+                { pages: "561-562", reading: "<span class='surah-name'>Al-Mulk</span> (End) - <span class='surah-name'>Al-Qalam</span> (15)" },
+                { pages: "563-564", reading: "<span class='surah-name'>Al-Qalam</span> (16) - <span class='surah-name'>Al-Haqqah</span> (8)" },
+                { pages: "565-566", reading: "<span class='surah-name'>Al-Haqqah</span> (9) - <span class='surah-name'>Al-Ma'arij</span> (10)" },
+                { pages: "567-568", reading: "<span class='surah-name'>Al-Ma'arij</span> (11) - <span class='surah-name'>Nuh</span> (28 - Selesai)" },
+                { pages: "569-570", reading: "<span class='surah-name'>Al-Jinn</span> (1) - (28 - Selesai)" }
+            ]},
+            // Day 58
+            { day: 58, sessions: [
+                { pages: "571-572", reading: "<span class='surah-name'>Al-Muzzammil</span> (1) - <span class='surah-name'>Al-Muddaththir</span> (17)" },
+                { pages: "573-574", reading: "<span class='surah-name'>Al-Muddaththir</span> (18) - <span class='surah-name'>Al-Qiyamah</span> (19)" },
+                { pages: "575-576", reading: "<span class='surah-name'>Al-Qiyamah</span> (20) - <span class='surah-name'>Al-Insan</span> (25)" },
+                { pages: "577-578", reading: "<span class='surah-name'>Al-Insan</span> (26) - <span class='surah-name'>Al-Mursalat</span> (19)" },
+                { pages: "579-580", reading: "<span class='surah-name'>Al-Mursalat</span> (20) - (50 - Selesai)" }
+            ]},
+            // Day 59
+            { day: 59, sessions: [
+                { pages: "581-582", reading: "<span class='surah-name'>An-Naba'</span> (1) - (40 - Selesai)" },
+                { pages: "583-584", reading: "<span class='surah-name'>An-Nazi'at</span> (1) - <span class='surah-name'>'Abasa</span> (16)" },
+                { pages: "585-586", reading: "<span class='surah-name'>'Abasa</span> (17) - <span class='surah-name'>At-Takwir</span> (29 - Selesai)" },
+                { pages: "587-588", reading: "<span class='surah-name'>Al-Infitar</span> (1) - <span class='surah-name'>At-Tariq</span> (17 - Selesai)" },
+                { pages: "589-590", reading: "<span class='surah-name'>Al-A'la</span> (1) - <span class='surah-name'>Al-Buruj</span> (22 - Selesai)" }
+            ]},
+            // Day 60
+            { day: 60, sessions: [
+                { pages: "591-592", reading: "<span class='surah-name'>At-Tariq</span> (End) - <span class='surah-name'>Al-Ghashiyah</span> (26 - Selesai)" },
+                { pages: "593-594", reading: "<span class='surah-name'>Al-Fajr</span> (1) - <span class='surah-name'>Al-Balad</span> (20 - Selesai)" },
+                { pages: "595-596", reading: "<span class='surah-name'>Ash-Shams</span> (1) - <span class='surah-name'>Al-Layl</span> (21 - Selesai)" },
+                { pages: "597-598", reading: "<span class='surah-name'>Ad-Duha</span> (1) - <span class='surah-name'>Al-Bayyinah</span> (8 - Selesai)" },
+                { pages: "599-604", reading: "<span class='surah-name'>Az-Zalzalah</span> (1) - <span class='surah-name'>An-Nas</span> (6 - Khatam)" }
+            ]}
+        ];
+
+        // App state
+        let appData = {
+            startDate: null,
+            duration: 60,
+            schedule: [],
+            progress: {}
+        };
+        let selectedDay = null;
+        let hasShownSuccess = false;
+
+        // DOM Elements
+        const setupScreen = document.getElementById('setupScreen');
+        const mainApp = document.getElementById('mainApp');
+        const startDateInput = document.getElementById('startDateInput');
+        const durationSelect = document.getElementById('durationSelect');
+        const startBtn = document.getElementById('startBtn');
+        const calendarScroll = document.getElementById('calendarScroll');
+        const sessionPanel = document.getElementById('sessionPanel');
+        const emptyState = document.getElementById('emptyState');
+        const sessionContent = document.getElementById('sessionContent');
+        const sessionList = document.getElementById('sessionList');
+        const successModal = document.getElementById('successModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
+        // Set today's date as default
+        const today = new Date().toISOString().split('T')[0];
+        startDateInput.value = today;
+        startBtn.disabled = false;
+
+        // Start button click
+        startBtn.addEventListener('click', () => {
+            const startDate = new Date(startDateInput.value);
+            const duration = parseInt(durationSelect.value);
+            initializeApp(startDate, duration);
+        });
+
+        // Date input change
+        startDateInput.addEventListener('change', () => {
+            startBtn.disabled = !startDateInput.value;
+        });
+
+        // Scroll navigation
+        document.getElementById('scrollLeft').addEventListener('click', () => {
+            calendarScroll.scrollBy({ left: -200, behavior: 'smooth' });
+        });
+
+        document.getElementById('scrollRight').addEventListener('click', () => {
+            calendarScroll.scrollBy({ left: 200, behavior: 'smooth' });
+        });
+
+        // Reset button
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm('Apakah Anda yakin ingin mengatur ulang semua progress?')) {
+                localStorage.removeItem('quranTrackerAlka');
+                location.reload();
+            }
+        });
+
+        // Close modal
+        closeModalBtn.addEventListener('click', () => {
+            successModal.classList.remove('active');
+        });
+
+        // Initialize app
+        function initializeApp(startDate, duration) {
+            appData.startDate = startDate;
+            appData.duration = duration;
+            
+            // Generate schedule with merged sessions based on duration
+            appData.schedule = generateSchedule(duration);
+
+            // Initialize progress
+            if (!appData.progress) {
+                appData.progress = {};
+            }
+
+            // Save to localStorage
+            saveData();
+
+            // Show main app
+            setupScreen.classList.add('hidden');
+            mainApp.classList.add('active');
+
+            // Render
+            updateHeaderInfo();
+            renderCalendar();
+            selectToday();
+        }
+
+        // Generate schedule with merged sessions
+        function generateSchedule(duration) {
+            const schedule = [];
+            const totalSessions = 300; // 60 days x 5 sessions
+            const sessionsPerDay = Math.ceil(totalSessions / duration);
+            
+            let sessionIndex = 0;
+            
+            for (let day = 0; day < duration; day++) {
+                const date = new Date(appData.startDate);
+                date.setDate(date.getDate() + day);
+                
+                const daySessions = [];
+                const sessionsForThisDay = Math.min(sessionsPerDay, totalSessions - sessionIndex);
+                
+                for (let s = 0; s < sessionsForThisDay; s++) {
+                    if (sessionIndex < totalSessions) {
+                        const sourceDay = Math.floor(sessionIndex / 5);
+                        const sourceSession = sessionIndex % 5;
+                        
+                        if (quranSchedule[sourceDay] && quranSchedule[sourceDay].sessions[sourceSession]) {
+                            daySessions.push(quranSchedule[sourceDay].sessions[sourceSession]);
+                        }
+                        sessionIndex++;
+                    }
+                }
+                
+                schedule.push({
+                    day: day + 1,
+                    date: date,
+                    sessions: daySessions
+                });
+            }
+            
+            return schedule;
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            const dataToSave = {
+                startDate: appData.startDate ? appData.startDate.toISOString() : null,
+                duration: appData.duration,
+                progress: appData.progress
+            };
+            localStorage.setItem('quranTrackerAlka', JSON.stringify(dataToSave));
+        }
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('quranTrackerAlka');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.startDate) {
+                    appData.startDate = new Date(parsed.startDate);
+                    appData.duration = parsed.duration || 60;
+                    appData.progress = parsed.progress || {};
+                    
+                    // Regenerate schedule
+                    appData.schedule = generateSchedule(appData.duration);
+
+                    // Show main app
+                    setupScreen.classList.add('hidden');
+                    mainApp.classList.add('active');
+                    
+                    // Update duration select
+                    durationSelect.value = appData.duration.toString();
+                    
+                    updateHeaderInfo();
+                    renderCalendar();
+                    selectToday();
+                }
+            }
+        }
+
+        // Update header info
+        function updateHeaderInfo() {
+            const endDate = new Date(appData.startDate);
+            endDate.setDate(endDate.getDate() + appData.duration - 1);
+            
+            const today = new Date();
+            const daysLeft = Math.max(0, Math.ceil((endDate - today) / (1000 * 60 * 60 * 24)) + 1);
+            
+            document.getElementById('startDateDisplay').textContent = formatDateShort(appData.startDate);
+            document.getElementById('endDateDisplay').textContent = formatDateShort(endDate);
+            document.getElementById('daysLeftDisplay').textContent = daysLeft + ' hari';
+            document.getElementById('calendarTitle').textContent = `Jadwal ${appData.duration} Hari`;
+            
+            updateProgressCircle();
+        }
+
+        // Format date
+        function formatDateShort(date) {
+            return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+        }
+
+        function formatDateFull(date) {
+            const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            return {
+                weekday: days[date.getDay()],
+                day: date.getDate(),
+                month: months[date.getMonth()]
+            };
+        }
+
+        // Update progress circle
+        function updateProgressCircle() {
+            let totalSessions = 0;
+            let completedSessions = 0;
+            
+            appData.schedule.forEach((item, index) => {
+                const dateKey = item.date.toISOString().split('T')[0];
+                const dayProgress = appData.progress[dateKey] || [];
+                totalSessions += item.sessions.length;
+                completedSessions += dayProgress.filter(s => s).length;
+            });
+            
+            const percent = totalSessions > 0 ? Math.round((completedSessions / totalSessions) * 100) : 0;
+            document.getElementById('progressCircle').style.setProperty('--progress', percent + '%');
+            document.getElementById('progressText').textContent = percent + '%';
+            
+            // Check if khatam complete
+            if (percent === 100 && !hasShownSuccess) {
+                hasShownSuccess = true;
+                setTimeout(() => {
+                    showSuccessModal();
+                }, 500);
+            }
+        }
+
+        // Render calendar
+        function renderCalendar() {
+            calendarScroll.innerHTML = '';
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            appData.schedule.forEach((item, index) => {
+                const dateInfo = formatDateFull(item.date);
+                const dateKey = item.date.toISOString().split('T')[0];
+                const dayProgress = appData.progress[dateKey] || [];
+                const completedCount = dayProgress.filter(s => s).length;
+                const isCompleted = completedCount === item.sessions.length && item.sessions.length > 0;
+                const isToday = item.date.getTime() === today.getTime();
+                
+                const dayCard = document.createElement('div');
+                dayCard.className = `day-card ${isCompleted ? 'completed' : ''} ${isToday ? 'today' : ''}`;
+                dayCard.dataset.index = index;
+                dayCard.innerHTML = `
+                    <div class="day-weekday">${dateInfo.weekday}</div>
+                    <div class="day-number">${dateInfo.day}</div>
+                    <div class="day-month">${dateInfo.month}</div>
+                    <div class="day-progress-mini">
+                        <div class="day-progress-fill" style="width: ${item.sessions.length > 0 ? (completedCount / item.sessions.length) * 100 : 0}%"></div>
+                    </div>
+                `;
+                
+                dayCard.addEventListener('click', () => selectDay(index));
+                calendarScroll.appendChild(dayCard);
+            });
+        }
+
+        // Select today
+        function selectToday() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const todayIndex = appData.schedule.findIndex(item => {
+                const itemDate = new Date(item.date);
+                itemDate.setHours(0, 0, 0, 0);
+                return itemDate.getTime() === today.getTime();
+            });
+            
+            if (todayIndex !== -1) {
+                selectDay(todayIndex);
+                setTimeout(() => {
+                    const todayCard = calendarScroll.children[todayIndex];
+                    if (todayCard) {
+                        todayCard.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                    }
+                }, 100);
+            } else {
+                selectDay(0);
+            }
+        }
+
+        // Select day
+        function selectDay(index) {
+            selectedDay = index;
+            
+            // Update active state
+            document.querySelectorAll('.day-card').forEach((card, i) => {
+                card.classList.toggle('active', i === index);
+            });
+            
+            // Show session content
+            emptyState.style.display = 'none';
+            sessionContent.style.display = 'block';
+            
+            const dayData = appData.schedule[index];
+            const dateKey = dayData.date.toISOString().split('T')[0];
+            const dayProgress = appData.progress[dateKey] || [];
+            
+            // Update panel header
+            document.getElementById('panelTitle').textContent = `Hari ${dayData.day}`;
+            document.getElementById('panelSubtitle').textContent = `${dayData.sessions.length} sesi membaca`;
+            
+            const completedCount = dayProgress.filter(s => s).length;
+            document.getElementById('completedCount').textContent = `${completedCount}/${dayData.sessions.length}`;
+            
+            // Render sessions
+            renderSessions(dayData, dayProgress, dateKey);
+        }
+
+        // Render sessions
+        function renderSessions(dayData, dayProgress, dateKey) {
+            sessionList.innerHTML = '';
+            
+            dayData.sessions.forEach((session, index) => {
+                const isCompleted = dayProgress[index] || false;
+                
+                const sessionItem = document.createElement('div');
+                sessionItem.className = `session-item ${isCompleted ? 'completed' : ''}`;
+                sessionItem.innerHTML = `
+                    <div class="session-header">
+                        <div class="session-checkbox">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <span class="session-number">Sesi ${index + 1}</span>
+                        <span class="session-pages">Hal. ${session.pages}</span>
+                    </div>
+                    <div class="session-reading">${session.reading}</div>
+                `;
+                
+                sessionItem.addEventListener('click', () => toggleSession(dateKey, index));
+                sessionList.appendChild(sessionItem);
+            });
+        }
+
+        // Toggle session completion
+        function toggleSession(dateKey, sessionIndex) {
+            if (!appData.progress[dateKey]) {
+                appData.progress[dateKey] = [];
+            }
+            
+            appData.progress[dateKey][sessionIndex] = !appData.progress[dateKey][sessionIndex];
+            
+            saveData();
+            
+            // Re-render
+            const dayData = appData.schedule[selectedDay];
+            const dayProgress = appData.progress[dateKey] || [];
+            renderSessions(dayData, dayProgress, dateKey);
+            
+            // Update UI
+            updateProgressCircle();
+            renderCalendar();
+            
+            const completedCount = dayProgress.filter(s => s).length;
+            document.getElementById('completedCount').textContent = `${completedCount}/${dayData.sessions.length}`;
+        }
+
+        // Show success modal
+        function showSuccessModal() {
+            successModal.classList.add('active');
+            startConfetti();
+        }
+
+        // Confetti effect
+        function startConfetti() {
+            const canvas = document.getElementById('confettiCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const confettiCount = 200;
+            const confetti = [];
+            
+            const colors = ['#00D26A', '#00E676', '#00B85C', '#FFD700', '#FF6B6B', '#4ECDC4'];
+            
+            for (let i = 0; i < confettiCount; i++) {
+                confetti.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: Math.random() * 10 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speed: Math.random() * 3 + 2,
+                    angle: Math.random() * 360,
+                    spin: Math.random() * 10 - 5
+                });
+            }
+            
+            let animationId;
+            let frameCount = 0;
+            
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                confetti.forEach((c, i) => {
+                    c.y += c.speed;
+                    c.angle += c.spin;
+                    c.x += Math.sin(c.angle * Math.PI / 180) * 2;
+                    
+                    ctx.save();
+                    ctx.translate(c.x, c.y);
+                    ctx.rotate(c.angle * Math.PI / 180);
+                    ctx.fillStyle = c.color;
+                    ctx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size);
+                    ctx.restore();
+                    
+                    if (c.y > canvas.height) {
+                        c.y = -c.size;
+                        c.x = Math.random() * canvas.width;
+                    }
+                });
+                
+                frameCount++;
+                if (frameCount < 300) { // Run for ~5 seconds
+                    animationId = requestAnimationFrame(animate);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            
+            animate();
+            
+            // Stop on modal close
+            closeModalBtn.addEventListener('click', () => {
+                cancelAnimationFrame(animationId);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }, { once: true });
+        }
+
+        // Load data on startup
+        loadData();
+    </script>
+</body>
+</html>
