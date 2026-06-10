@@ -1,4 +1,4 @@
-name: Build WebView APK CLEAN
+name: Build WebView APK FINAL
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Setup Java
@@ -18,21 +18,31 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Create Android WebView Project (clean)
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Download REAL Android WebView Project
+        run: |
+          git clone https://github.com/lineageos/android_packages_apps_WebView.git android
+
+      - name: Replace web content
         run: |
           mkdir -p android/app/src/main/assets/www
-          mkdir -p android/app/src/main/java/com/app
-
-          echo "package com.app;" > android/app/src/main/java/com/app/MainActivity.java
-
           cp index.html manifest.json sw.js android/app/src/main/assets/www/
           cp -r assets android/app/src/main/assets/www/ || true
 
-      - name: Build (simulate safe step)
-        run: echo "This step needs real Android Gradle project"
+      - name: Fix Gradle permissions
+        run: |
+          cd android
+          chmod +x gradlew || true
 
-      - name: Upload Web Files
+      - name: Build Debug APK
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: web-files
-          path: android/app/src/main/assets/www
+          name: Khatam-Quran-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
