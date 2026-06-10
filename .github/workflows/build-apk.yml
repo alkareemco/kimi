@@ -1,4 +1,4 @@
-name: Build WebView APK
+name: Build WebView APK (STABLE FINAL)
 
 on:
   workflow_dispatch:
@@ -18,40 +18,30 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Create FULL Android Project (clean WebView)
+      - name: Download Android WebView Template (REAL PROJECT)
+        run: |
+          curl -L https://github.com/taoweiji/Android-WebView-Template/archive/refs/heads/master.zip -o android.zip
+          unzip android.zip
+          mv Android-WebView-Template-master android
+
+      - name: Inject your web app
         run: |
           mkdir -p android/app/src/main/assets/www
-          mkdir -p android/app/src/main/java/com/app
-
-          cat <<EOF > android/app/src/main/java/com/app/MainActivity.java
-package com.app;
-
-import android.os.Bundle;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import androidx.appcompat.app.AppCompatActivity;
-
-public class MainActivity extends AppCompatActivity {
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        WebView webView = new WebView(this);
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.setWebViewClient(new WebViewClient());
-        webView.loadUrl("file:///android_asset/www/index.html");
-        setContentView(webView);
-    }
-}
-EOF
-
           cp index.html manifest.json sw.js android/app/src/main/assets/www/
           cp -r assets android/app/src/main/assets/www/ || true
 
-      - name: Build placeholder (safe check)
-        run: echo "Android project generated"
+      - name: Fix permissions
+        run: |
+          cd android
+          chmod +x gradlew
 
-      - name: Upload Web Assets
+      - name: Build APK
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: web-assets
-          path: android/app/src/main/assets/www
+          name: Khatam-Quran-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
