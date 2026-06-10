@@ -1,11 +1,4 @@
-# .github/workflows/build-release.yml
-#
-# Khatam Quran — Full CI/CD Pipeline
-# Triggers on every push to fix-issue-2.
-# Builds APK via Capacitor + Gradle, creates GitHub Release with QR code,
-# and calls CodeWords to send an email notification.
-
-name: "Build & Release APK"
+name: Build and Release APK
 
 on:
   push:
@@ -17,7 +10,7 @@ permissions:
 
 jobs:
   build-and-release:
-    name: Build APK -> Release -> Notify
+    name: Build APK - Release - Notify
     runs-on: ubuntu-latest
 
     steps:
@@ -26,15 +19,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate version + URLs
+      - name: Generate version and URLs
         id: version
         run: |
-          DATE=$(date +'%Y.%m.%d')
+          DATE=$(date +"%Y.%m.%d")
           SHA=$(git rev-parse --short HEAD)
           VERSION="v${DATE}-${SHA}"
           APK_NAME="khatam-quran-${VERSION}.apk"
-          REPO="${{ github.repository }}"
-          DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${VERSION}/${APK_NAME}"
+          GH_REPO="${{ github.repository }}"
+          DOWNLOAD_URL="https://github.com/${GH_REPO}/releases/download/${VERSION}/${APK_NAME}"
           echo "VERSION=${VERSION}"           >> "$GITHUB_OUTPUT"
           echo "APK_NAME=${APK_NAME}"         >> "$GITHUB_OUTPUT"
           echo "DOWNLOAD_URL=${DOWNLOAD_URL}" >> "$GITHUB_OUTPUT"
@@ -59,7 +52,7 @@ jobs:
           mkdir -p www
           cp index.html sw.js manifest.json www/
           cp -r assets/ www/assets/
-          echo "Bundled:"; find www -type f
+          find www -type f
 
       - name: Install Capacitor
         run: |
@@ -68,14 +61,8 @@ jobs:
 
       - name: Write capacitor.config.json
         run: |
-          cat > capacitor.config.json << 'EOF'
-          {
-            "appId": "com.alkareemco.khatamquran",
-            "appName": "Quran Tracker",
-            "webDir": "www",
-            "server": { "androidScheme": "https" }
-          }
-          EOF
+          echo '{"appId":"com.alkareemco.khatamquran","appName":"Quran Tracker","webDir":"www","server":{"androidScheme":"https"}}' > capacitor.config.json
+          cat capacitor.config.json
 
       - name: Add Android platform
         run: npx cap add android
@@ -90,7 +77,7 @@ jobs:
           ./gradlew assembleDebug --no-daemon
           find . -name "*.apk"
 
-      - name: Rename APK
+      - name: Rename APK with version
         run: |
           APK="${{ steps.version.outputs.APK_NAME }}"
           cp android/app/build/outputs/apk/debug/app-debug.apk "${APK}"
@@ -101,30 +88,33 @@ jobs:
           DOWNLOAD_URL: ${{ steps.version.outputs.DOWNLOAD_URL }}
         run: |
           pip install "qrcode[pil]" Pillow --quiet
-          python3 - <<'PYEOF'
-          import qrcode, os
-          url = os.environ["DOWNLOAD_URL"]
-          qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=12, border=4)
-          qr.add_data(url)
-          qr.make(fit=True)
-          img = qr.make_image(fill_color="#0A0E14", back_color="#F8F4E9")
-          img.save("qr-code.png")
-          print(f"QR saved for: {url}")
-          PYEOF
+          cat > /tmp/gen_qr.py << 'PYEOF'
+import qrcode, os
+url = os.environ["DOWNLOAD_URL"]
+qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=12, border=4)
+qr.add_data(url)
+qr.make(fit=True)
+img = qr.make_image(fill_color="#0A0E14", back_color="#F8F4E9")
+img.save("qr-code.png")
+print(f"QR saved for: {url}")
+PYEOF
+          python3 /tmp/gen_qr.py
 
       - name: URL-encode download URL
         id: encode
         env:
           RAW_URL: ${{ steps.version.outputs.DOWNLOAD_URL }}
         run: |
-          python3 - <<'PYEOF'
-          import os
-          from urllib.parse import quote
-          url = os.environ["RAW_URL"]
-          encoded = quote(url, safe="")
-          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write(f"ENCODED_URL={encoded}\n")
-          PYEOF
+          cat > /tmp/encode_url.py << 'PYEOF'
+import os
+from urllib.parse import quote
+url = os.environ["RAW_URL"]
+encoded = quote(url, safe="")
+with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+    f.write(f"ENCODED_URL={encoded}\n")
+print("URL encoded")
+PYEOF
+          python3 /tmp/encode_url.py
 
       - name: Generate changelog
         id: changelog
@@ -135,14 +125,18 @@ jobs:
           else
             NOTES=$(git log --pretty=format:"- %s" --no-merges | head -10)
           fi
-          [ -z "$NOTES" ] && NOTES="- Build from commit $(git rev-parse --short HEAD)"
-          printf "NOTES<<GITDELIM\n%s\nGITDELIM\n" "$NOTES" >> "$GITHUB_OUTPUT"
+          if [ -z "$NOTES" ]; then
+            NOTES="- Build from commit $(git rev-parse --short HEAD)"
+          fi
+          echo "NOTES<<GITDELIM" >> "$GITHUB_OUTPUT"
+          echo "$NOTES" >> "$GITHUB_OUTPUT"
+          echo "GITDELIM" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.VERSION }}
-          name: "Qur'an Tracker ${{ steps.version.outputs.VERSION }}"
+          name: Quran Tracker ${{ steps.version.outputs.VERSION }}
           body: |
             ## Quran Tracker ${{ steps.version.outputs.VERSION }}
 
@@ -150,11 +144,11 @@ jobs:
 
             ![Download QR](https://api.qrserver.com/v1/create-qr-code/?size=280x280&ecc=H&data=${{ steps.encode.outputs.ENCODED_URL }})
 
-            > Android: Open camera app, point at QR, tap notification. Download starts immediately.
+            > Android: Open camera, point at QR code, tap notification. Download starts immediately.
 
             ### Direct download
 
-            [Download ${{ steps.version.outputs.APK_NAME }}](${{ steps.version.outputs.DOWNLOAD_URL }})
+            [Download APK - ${{ steps.version.outputs.APK_NAME }}](${{ steps.version.outputs.DOWNLOAD_URL }})
 
             > First install: Settings > Security > Install unknown apps > allow your browser.
 
@@ -171,16 +165,21 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Notify CodeWords (email with QR)
-        if: ${{ secrets.CODEWORDS_WEBHOOK_URL != '' }}
+      - name: Send email notification via CodeWords
+        env:
+          WEBHOOK_URL: ${{ secrets.CODEWORDS_WEBHOOK_URL }}
         run: |
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "No webhook URL configured, skipping email"
+            exit 0
+          fi
           VERSION="${{ steps.version.outputs.VERSION }}"
-          APK_NAME="${{ steps.version.outputs.APK_NAME }}"
-          DOWNLOAD_URL="${{ steps.version.outputs.DOWNLOAD_URL }}"
-          RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/${VERSION}"
+          APK="${{ steps.version.outputs.APK_NAME }}"
+          DURL="${{ steps.version.outputs.DOWNLOAD_URL }}"
+          RURL="https://github.com/${{ github.repository }}/releases/tag/${VERSION}"
           NOTES=$(echo "${{ steps.changelog.outputs.NOTES }}" | tr '\n' '|' | head -c 400)
-          curl -s -f -X POST "${{ secrets.CODEWORDS_WEBHOOK_URL }}" \
+          curl -s -f -X POST "${WEBHOOK_URL}" \
             -H "Content-Type: application/json" --max-time 30 \
-            -d "{\"download_url\":\"${DOWNLOAD_URL}\",\"version\":\"${VERSION}\",\"release_url\":\"${RELEASE_URL}\",\"apk_filename\":\"${APK_NAME}\",\"release_notes\":\"${NOTES}\",\"app_name\":\"Quran Tracker\"}" \
+            -d "{\"download_url\":\"${DURL}\",\"version\":\"${VERSION}\",\"release_url\":\"${RURL}\",\"apk_filename\":\"${APK}\",\"release_notes\":\"${NOTES}\",\"app_name\":\"Quran Tracker\"}" \
             && echo "Email notification sent" \
-            || echo "Webhook failed (non-fatal)"
+            || echo "Webhook failed (build still succeeded)"
