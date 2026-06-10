@@ -1,0 +1,43 @@
+name: Build WebView APK
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Prepare web files
+        run: |
+          mkdir -p app/src/main/assets/www
+          cp index.html manifest.json sw.js app/src/main/assets/www/
+          cp -r assets app/src/main/assets/www/
+
+      - name: Build APK
+        run: |
+          curl -L https://github.com/ionic-team/capacitor-android-template/archive/refs/heads/main.zip -o template.zip
+          unzip template.zip
+          mv capacitor-android-template-main android
+
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
