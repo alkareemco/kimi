@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0A0E14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Qur'an Tracker</title>
+    <link rel="icon" type="image/png" href="assets/quran-icon.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #0A0E14; --bg-card: #141B24; --bg-card-hover: #1A2330;
+            --accent-green: #00D26A; --accent-green-dark: #00B85C; --accent-green-light: #00E676;
+            --text-primary: #FFFFFF; --text-secondary: #8B949E; --text-muted: #6E7681;
+            --border-color: #21262D;
+            --accent-gold: #FFD700; --accent-purple: #9B59B6; --accent-blue: #3498DB; --accent-orange: #E67E22;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: var(--bg-primary); color: var(--text-primary); min-height: 100vh; overflow-x: hidden;
+        }
+        .setup-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; text-align: center; position: relative; }
+        .setup-screen.hidden { display: none; }
+        .setup-logo { width: 100px; height: 100px; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; }
+        .setup-logo img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 8px 32px rgba(0, 210, 106, 0.3)); }
+        .setup-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+        .setup-subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 40px; }
+        .setup-form { width: 100%; max-width: 320px; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .date-input, .select-input { width: 100%; padding: 16px 20px; background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 16px; color: var(--text-primary); font-size: 16px; outline: none; transition: all 0.2s ease; font-family: inherit; }
+        .date-input:focus, .select-input:focus { border-color: var(--accent-green); }
+        .date-input::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+        .select-input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238B949E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; background-size: 20px; }
+        .quick-days-label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; }
+        .quick-days-container { display: flex; gap: 12px; margin-bottom: 24px; justify-content: center; }
+        .quick-day-btn { flex: 1; max-width: 90px; aspect-ratio: 1; background: linear-gradient(135deg, var(--accent-green), var(--accent-green-dark)); border: none; border-radius: 16px; color: var(--bg-primary); font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 4px 16px rgba(0, 210, 106, 0.3); }
+        .quick-day-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0, 210, 106, 0.5); }
+        .quick-day-btn:active { transform: translateY(-1px); }
+        .quick-day-btn.selected { box-shadow: 0 0 0 3px var(--accent-green-light), 0 8px 24px rgba(0, 210, 106, 0.5); }
+        .quick-day-btn .days-label { font-size: 11px; font-weight: 600; opacity: 0.9; }
+        .start-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, var(--accent-green), var(--accent-green-dark)); border: none; border-radius: 16px; color: var(--bg-primary); font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; margin-top: 12px; }
+        .start-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 210, 106, 0.4); }
+        .start-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .brand-logo-bottom { position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%); opacity: 0.6; }
+        .brand-logo-bottom img { width: 40px; height: 40px; object-fit: contain; }
+        .main-app { display: none; min-height: 100vh; padding-bottom: 80px; }
+        .main-app.active { display: block; }
+        .app-header { background: var(--bg-card); padding: 16px 20px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; }
+        .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-logo { display: flex; align-items: center; gap: 10px; }
+        .header-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        .header-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .header-title { font-size: 18px; font-weight: 700; }
+        .header-progress { display: flex; align-items: center; gap: 12px; }
+        
+        .level-badge { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.2s ease; position: relative; }
+        .level-badge:hover { transform: scale(1.05); }
+        
+        .level-circle-container { display: flex; align-items: center; gap: 8px; background: var(--bg-primary); border: 2px solid var(--accent-green); border-radius: 50px; padding: 6px 14px 6px 6px; box-shadow: 0 4px 15px rgba(0, 210, 106, 0.3); }
+        
+        .level-circle { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent-green), var(--accent-green-dark)); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0; }
+        
+        .level-number { font-size: 14px; font-weight: 800; color: var(--bg-primary); }
+        
+        .level-info { display: flex; flex-direction: column; align-items: flex-start; }
+        
+        .level-label { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .level-badge-icon { font-size: 16px; line-height: 1; }
+        
+        .level-progress-mini { width: 100%; height: 3px; background: var(--border-color); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+        
+        .level-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent-green), var(--accent-green-light)); border-radius: 2px; transition: width 0.5s ease; }
+        
+        .date-info-wrapper { position: relative; overflow: hidden; border-radius: 12px; background: var(--bg-primary); }
+        
+        .date-info-progress-bg { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: var(--border-color); z-index: 0; }
+        
+        .date-info-progress { position: absolute; bottom: 0; left: 0; height: 4px; background: linear-gradient(90deg, var(--accent-green), var(--accent-green-light)); transition: width 0.5s ease; z-index: 1; border-radius: 0 2px 2px 0; }
+        
+        .date-info { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 16px; font-size: 13px; position: relative; z-index: 1; }
+        .date-info-item { display: flex; flex-direction: column; gap: 4px; }
+        .date-info-label { color: var(--text-secondary); font-size: 11px; text-transform: uppercase; }
+        .date-info-value { font-weight: 600; color: var(--accent-green); }
+        
+        .calendar-section { padding: 20px; }
+        .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .calendar-title { font-size: 16px; font-weight: 600; }
+        .calendar-nav { display: flex; gap: 8px; }
+        .nav-btn { width: 32px; height: 32px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+        .nav-btn:hover { background: var(--bg-card-hover); border-color: var(--accent-green); }
+        .nav-btn svg { width: 16px; height: 16px; }
+        .calendar-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 4px 4px 16px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .calendar-scroll::-webkit-scrollbar { display: none; }
+        .day-card { flex-shrink: 0; width: 72px; background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 16px; padding: 12px 8px; text-align: center; cursor: pointer; transition: all 0.2s ease; }
+        .day-card:hover { background: var(--bg-card-hover); }
+        .day-card.active { border-color: var(--accent-green); background: var(--bg-card-hover); }
+        .day-card.completed { border-color: var(--accent-green); background: linear-gradient(180deg, rgba(0, 210, 106, 0.1), var(--bg-card)); }
+        .day-card.completed .day-number { color: var(--accent-green); }
+        .day-card.today { border-color: var(--accent-green-light); box-shadow: 0 0 0 2px rgba(0, 210, 106, 0.2); }
+        .day-weekday { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px; }
+        .day-number { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .day-month { font-size: 11px; color: var(--text-secondary); }
+        .day-progress-mini { margin-top: 8px; height: 4px; background: var(--border-color); border-radius: 2px; overflow: hidden; }
+        .day-progress-fill { height: 100%; background: var(--accent-green); border-radius: 2px; transition: width 0.3s ease; }
+        .session-panel { background: var(--bg-card); border-top: 1px solid var(--border-color); padding: 20px; min-height: calc(100vh - 280px); overflow: hidden; position: relative; }
+        .session-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .session-panel-title { font-size: 18px; font-weight: 600; }
+        .session-panel-subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+        .session-stats { display: flex; gap: 16px; }
+        .session-stat { text-align: center; }
+        .session-stat-value { font-size: 24px; font-weight: 700; color: var(--accent-green); }
+        .session-stat-label { font-size: 11px; color: var(--text-secondary); }
+        .session-list-container { position: relative; width: 100%; overflow: hidden; }
+        .session-list { display: flex; flex-direction: column; gap: 12px; touch-action: pan-y; user-select: none; transition: transform 0.1s ease-out; }
+        .session-list.swiping { transition: none; }
+        .session-item { background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; cursor: pointer; transition: all 0.2s ease; touch-action: pan-y; }
+        .session-item:hover { border-color: var(--accent-green); }
+        .session-item.completed { background: linear-gradient(90deg, rgba(0, 210, 106, 0.1), var(--bg-primary)); border-color: var(--accent-green); }
+        .session-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .session-checkbox { width: 28px; height: 28px; border: 2px solid var(--text-muted); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s ease; }
+        .session-item.completed .session-checkbox { background: var(--accent-green); border-color: var(--accent-green); }
+        .session-checkbox svg { width: 16px; height: 16px; color: var(--bg-primary); opacity: 0; }
+        .session-item.completed .session-checkbox svg { opacity: 1; }
+        .session-number { font-size: 14px; font-weight: 600; }
+        .session-item.completed .session-number { text-decoration: line-through; color: var(--text-muted); }
+        .session-pages { margin-left: auto; font-size: 12px; color: var(--text-secondary); background: var(--bg-card); padding: 4px 10px; border-radius: 20px; }
+        .session-reading { padding-left: 40px; font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
+        .session-reading .surah-name { color: var(--accent-green); font-weight: 600; }
+        .session-item.completed .session-reading { color: var(--text-muted); }
+        .session-actions { display: flex; gap: 8px; margin-top: 12px; padding-left: 40px; }
+        .btn-read { padding: 10px 16px; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); flex: 1; justify-content: center; }
+        .btn-read:hover { background: var(--bg-card-hover); border-color: var(--accent-green); }
+        .btn-read svg { width: 16px; height: 16px; }
+        .swipe-hint { text-align: center; font-size: 12px; color: var(--text-muted); margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .swipe-hint svg { width: 16px; height: 16px; }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+        .empty-state-icon { width: 80px; height: 80px; margin: 0 auto 16px; opacity: 0.5; }
+        .empty-state-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .empty-state-text { font-size: 14px; }
+        .fab-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: row-reverse; align-items: center; gap: 0; z-index: 1000; }
+        .fab-main { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: none; background: linear-gradient(135deg, var(--accent-green), var(--accent-green-dark)); box-shadow: 0 4px 20px rgba(0, 210, 106, 0.4); z-index: 1002; position: relative; }
+        .fab-main:hover { transform: scale(1.05); box-shadow: 0 6px 24px rgba(0, 210, 106, 0.5); }
+        .fab-main img { width: 32px; height: 32px; object-fit: contain; border-radius: 50%; transition: transform 0.3s ease; }
+        .fab-main.active img { transform: rotate(45deg); }
+        .fab-menu { display: flex; flex-direction: row; gap: 12px; margin-right: -56px; opacity: 0; visibility: hidden; transform: translateX(20px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .fab-main.active + .fab-menu { margin-right: 12px; opacity: 1; visibility: visible; transform: translateX(0); }
+        .fab-btn { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; border: none; text-decoration: none; transform: scale(0.8); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .fab-main.active + .fab-menu .fab-btn { transform: scale(1); opacity: 1; }
+        .fab-main.active + .fab-menu .fab-btn:nth-child(1) { transition-delay: 0.05s; }
+        .fab-main.active + .fab-menu .fab-btn:nth-child(2) { transition-delay: 0.1s; }
+        .fab-main.active + .fab-menu .fab-btn:nth-child(3) { transition-delay: 0.15s; }
+        .fab-btn svg { width: 20px; height: 20px; }
+        .fab-surah { background: var(--bg-card); border: 2px solid var(--accent-green); color: var(--accent-green); }
+        .fab-surah:hover { background: var(--accent-green); color: var(--bg-primary); transform: scale(1.1); }
+        .fab-donate { background: linear-gradient(135deg, var(--accent-green), var(--accent-green-dark)); color: var(--bg-primary); }
+        .fab-donate:hover { transform: scale(1.1); }
+        .fab-reset { background: var(--bg-card); border: 2px solid var(--text-muted); color: var(--text-secondary); }
+        .fab-reset:hover { border-color: var(--text-primary); color: var(--text-primary); transform: scale(1.1); }
+        .reader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-primary); z-index: 1500; display: none; flex-direction: column; }
+        .reader-overlay.active { display: flex; }
+        .reader-header { background: var(--bg-card); padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .reader-title-section { flex: 1; }
+        .reader-title { font-size: 18px; font-weight: 700; }
+        .reader-subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+        .reader-controls { display: flex; align-items: center; gap: 8px; }
+        .reader-btn { width: 40px; height: 40px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+        .reader-btn:hover { background: var(--bg-card-hover); border-color: var(--accent-green); }
+        .reader-btn svg { width: 20px; height: 20px; }
+        .reader-btn.active { background: var(--accent-green); border-color: var(--accent-green); color: var(--bg-primary); }
+        .font-size-btn { font-weight: 700; font-size: 14px; flex-direction: column; gap: 0; line-height: 1; }
+        .font-size-btn .font-small { font-size: 10px; }
+        .font-size-btn .font-large { font-size: 14px; }
+        .reader-close { width: 40px; height: 40px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .reader-close:hover { background: var(--border-color); }
+        .reader-close svg { width: 20px; height: 20px; }
+        .reader-content { flex: 1; overflow-y: auto; padding: 20px; -webkit-overflow-scrolling: touch; }
+        
+        /* Mode List (default) */
+        .reader-content.mode-list .surah-section { margin-bottom: 32px; }
+        .reader-content.mode-list .surah-header { text-align: center; padding: 20px; margin-bottom: 20px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-color); }
+        .reader-content.mode-list .surah-name-arabic { font-size: 28px; color: var(--accent-green); font-family: 'Traditional Arabic', 'Scheherazade', 'Amiri', serif; margin-bottom: 8px; }
+        .reader-content.mode-list .surah-name-latin { font-size: 16px; color: var(--text-secondary); margin-bottom: 4px; }
+        .reader-content.mode-list .surah-info { font-size: 12px; color: var(--text-muted); }
+        .reader-content.mode-list .bismillah { text-align: center; font-size: 24px; color: var(--accent-green); margin-bottom: 24px; padding: 20px; font-family: 'Traditional Arabic', 'Scheherazade', 'Amiri', serif; }
+        .reader-content.mode-list .ayah-container { margin-bottom: 20px; padding: 16px; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); }
+        .reader-content.mode-list .ayah-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .reader-content.mode-list .ayah-number { width: 32px; height: 32px; background: var(--accent-green); color: var(--bg-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+        .reader-content.mode-list .ayah-arabic { font-size: 22px; line-height: 2; text-align: right; direction: rtl; font-family: 'Traditional Arabic', 'Scheherazade', 'Amiri', serif; color: var(--text-primary); }
+        
+        /* Font Size Classes for List Mode */
+        .reader-content.mode-list.font-normal .ayah-arabic { font-size: 22px; }
+        .reader-content.mode-list.font-normal .bismillah { font-size: 24px; }
+        .reader-content.mode-list.font-normal .surah-name-arabic { font-size: 28px; }
+        
+        .reader-content.mode-list.font-large .ayah-arabic { font-size: 32px; }
+        .reader-content.mode-list.font-large .bismillah { font-size: 36px; }
+        .reader-content.mode-list.font-large .surah-name-arabic { font-size: 38px; }
+        
+        .reader-content.mode-list.font-xlarge .ayah-arabic { font-size: 42px; }
+        .reader-content.mode-list.font-xlarge .bismillah { font-size: 48px; }
+        .reader-content.mode-list.font-xlarge .surah-name-arabic { font-size: 48px; }
+        
+        /* Mode Mushaf */
+        .reader-content.mode-mushaf { padding: 20px; }
+        .reader-content.mode-mushaf .surah-section { margin-bottom: 40px; }
+        .reader-content.mode-mushaf .surah-header { text-align: center; padding: 20px; margin-bottom: 24px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-color); }
+        .reader-content.mode-mushaf .surah-name-arabic { font-size: 32px; color: var(--accent-green); font-family: 'Traditional Arabic', 'Scheherazade', 'Amiri', serif; margin-bottom: 8px; }
+        .reader-content.mode-mushaf .surah-name-latin { font-size: 16px; color: var(--text-secondary); margin-bottom: 4px; }
+        .reader-content.mode-mushaf .surah-info { font-size: 12px; color: var(--text-muted); }
+        .reader-content.mode-mushaf .bismillah { text-align: center; font-size: 28px; color: var(--accent-green); margin-bottom: 24px; padding: 20px; font-family: 'Traditional Arabic', 'Scheherazade', 'Amiri', serif; }
+        .reader-content.mode-mushaf .mushaf-container { direction: rtl; text-align: justify; line-height: 2.5; font-family: 'Traditional Arabic', 'Scheherazade', 'Amiri', serif; }
+        .reader-content.mode-mushaf .mushaf-ayah { display: inline; }
+        .reader-content.mode-mushaf .mushaf-ayah-text { color: var(--text-primary); }
+        .reader-content.mode-mushaf .mushaf-ayah-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent-green); color: var(--bg-primary); border-radius: 50%; font-size: 11px; font-weight: 700; margin: 0 4px; vertical-align: middle; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        
+        /* Mushaf Font Sizes */
+        .reader-content.mode-mushaf.font-normal .mushaf-container { font-size: 22px; }
+        .reader-content.mode-mushaf.font-normal .bismillah { font-size: 28px; }
+        .reader-content.mode-mushaf.font-normal .surah-name-arabic { font-size: 32px; }
+        .reader-content.mode-mushaf.font-normal .mushaf-ayah-number { width: 28px; height: 28px; font-size: 11px; }
+        
+        .reader-content.mode-mushaf.font-large .mushaf-container { font-size: 32px; }
+        .reader-content.mode-mushaf.font-large .bismillah { font-size: 38px; }
+        .reader-content.mode-mushaf.font-large .surah-name-arabic { font-size: 40px; }
+        .reader-content.mode-mushaf.font-large .mushaf-ayah-number { width: 36px; height: 36px; font-size: 13px; }
+        
+        .reader-content.mode-mushaf.font-xlarge .mushaf-container { font-size: 42px; }
+        .reader-content.mode-mushaf.font-xlarge .bismillah { font-size: 48px; }
+        .reader-content.mode-mushaf.font-xlarge .surah-name-arabic { font-size: 48px; }
+        .reader-content.mode-mushaf.font-xlarge .mushaf-ayah-number { width: 44px; height: 44px; font-size: 15px; }
+        
+        .reader-complete-section { position: sticky; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(to top, var(--bg-primary), transparent); display: flex; justify-content: center; }
+        .btn-complete-reading { width: 100%; max-width: 400px; padding: 18px 24px; background: linear-gradient(135deg, var(--accent-green), var(--accent-green-dark)); border: none; border-radius: 16px; color: var(--bg-primary); font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s ease; box-shadow: 0 4px 20px rgba(0, 210, 106, 0.4); }
+        .btn-complete-reading:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0, 210, 106, 0.5); }
+        .btn-complete-reading svg { width: 20px; height: 20px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: var(--bg-card); border-radius: 24px; padding: 40px; text-align: center; max-width: 360px; width: 90%; transform: scale(0.9); transition: all 0.3s ease; border: 2px solid var(--accent-green); }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .modal-icon { width: 100px; height: 100px; margin: 0 auto 24px; }
+        .modal-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .modal-title { font-size: 28px; font-weight: 700; margin-bottom: 12px; background: linear-gradient(135deg, var(--accent-green), var(--accent-green-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .modal-subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+        .modal-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--accent-green), var(--accent-green-dark)); border: none; border-radius: 16px; color: var(--bg-primary); font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+        .modal-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 210, 106, 0.4); }
+.khatam-modal { background: linear-gradient(145deg, #0f2e1c, #174d2e, #0c2517); border-radius: 25px; padding: 35px; color: #eafff3; box-shadow: 0 0 20px rgba(0, 255, 140, 0.4), 0 0 60px rgba(0, 200, 120, 0.3), inset 0 0 30px rgba(0, 255, 170, 0.1); border: 1px solid rgba(0, 255, 150, 0.4); position: relative; overflow: hidden; }
+.khatam-modal .modal-title { font-size: 24px; font-weight: bold; background: linear-gradient(90deg, #00ffae, #b6ffe4, #00d084); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 10px rgba(0, 255, 150, 0.7), 0 0 20px rgba(0, 255, 150, 0.4); }
+.khatam-modal .modal-subtitle { color: #c8ffe8; opacity: 0.9; }
+.khatam-modal .modal-btn { background: linear-gradient(135deg, #00c97a, #00ffae); border: none; color: #003d24; font-weight: bold; border-radius: 30px; box-shadow: 0 0 15px rgba(0, 255, 170, 0.6); transition: 0.3s ease; }
+.khatam-modal .modal-btn:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(0, 255, 170, 0.9); }
+        .surah-sheet-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); z-index: 1800; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .surah-sheet-overlay.active { opacity: 1; visibility: visible; }
+        .surah-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-radius: 24px 24px 0 0; z-index: 1801; transform: translateY(100%); transition: transform 0.3s ease; max-height: 80vh; display: flex; flex-direction: column; }
+        .surah-sheet-overlay.active .surah-sheet { transform: translateY(0); }
+        .surah-sheet-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .surah-sheet-title { font-size: 18px; font-weight: 700; }
+        .surah-sheet-close { width: 36px; height: 36px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .surah-sheet-close svg { width: 18px; height: 18px; }
+        .surah-sheet-content { flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+        .surah-list-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+        .surah-list-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: all 0.2s ease; }
+        .surah-list-item:hover { border-color: var(--accent-green); background: var(--bg-card-hover); }
+        .surah-number-box { width: 40px; height: 40px; background: var(--accent-green); color: var(--bg-primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+        .surah-list-info { flex: 1; }
+        .surah-list-name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+        .surah-list-arabic { font-size: 16px; color: var(--accent-green); font-family: 'Traditional Arabic', 'Scheherazade', serif; }
+        .surah-list-meta { font-size: 12px; color: var(--text-muted); }
+        #confettiCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2500; }
+        .daily-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.85); display: flex; align-items: center; justify-content: center; z-index: 2100; opacity: 0; visibility: hidden; transition: all 0.3s ease; padding: 20px; }
+        .daily-modal-overlay.active { opacity: 1; visibility: visible; }
+        .daily-modal-content { background: var(--bg-card); border-radius: 24px; padding: 32px 24px; text-align: center; max-width: 380px; width: 100%; transform: scale(0.9); transition: all 0.3s ease; border: 2px solid var(--accent-green); position: relative; }
+        .daily-modal-overlay.active .daily-modal-content { transform: scale(1); }
+        .daily-modal-icon { width: 70px; height: 70px; margin: 0 auto 20px; }
+        .daily-modal-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .daily-modal-title { font-size: 22px; font-weight: 700; margin-bottom: 16px; color: var(--accent-green); }
+        .daily-modal-doa-arabic { font-size: 20px; line-height: 1.8; color: var(--text-primary); margin-bottom: 12px; font-family: 'Traditional Arabic', 'Scheherazade', serif; direction: rtl; }
+        .daily-modal-doa-latin { font-size: 14px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 24px; font-style: italic; }
+        .daily-modal-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--accent-green), var(--accent-green-dark)); border: none; border-radius: 16px; color: var(--bg-primary); font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+        .daily-modal-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 210, 106, 0.4); }
+        .reset-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.85); display: flex; align-items: center; justify-content: center; z-index: 2200; opacity: 0; visibility: hidden; transition: all 0.3s ease; padding: 20px; }
+        .reset-modal-overlay.active { opacity: 1; visibility: visible; }
+        .reset-modal-content { background: var(--bg-card); border-radius: 24px; padding: 32px 24px; text-align: center; max-width: 360px; width: 100%; transform: scale(0.9); transition: all 0.3s ease; border: 2px solid var(--accent-green); }
+        .reset-modal-overlay.active .reset-modal-content { transform: scale(1); }
+        .reset-modal-icon { width: 70px; height: 70px; margin: 0 auto 20px; }
+        .reset-modal-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .reset-modal-title { font-size: 22px; font-weight: 700; margin-bottom: 12px; color: var(--accent-green); }
+        .reset-modal-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.6; }
+        .reset-modal-buttons { display: flex; flex-direction: column; gap: 12px; }
+        .reset-btn-primary { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--accent-green), var(--accent-green-dark)); border: none; border-radius: 16px; color: var(--bg-primary); font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+        .reset-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 210, 106, 0.4); }
+        .reset-btn-secondary { width: 100%; padding: 16px; background: transparent; border: 2px solid var(--accent-green); border-radius: 16px; color: var(--accent-green); font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+        .reset-btn-secondary:hover { background: rgba(0, 210, 106, 0.1); }
+        .reset-btn-cancel { width: 100%; padding: 12px; background: transparent; border: none; color: var(--text-muted); font-size: 14px; cursor: pointer; transition: all 0.2s ease; }
+        .reset-btn-cancel:hover { color: var(--text-secondary); }
+        .target-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.85); display: flex; align-items: center; justify-content: center; z-index: 2300; opacity: 0; visibility: hidden; transition: all 0.3s ease; padding: 20px; }
+        .target-modal-overlay.active { opacity: 1; visibility: visible; }
+        .target-modal-content { background: var(--bg-card); border-radius: 24px; padding: 32px 24px; text-align: center; max-width: 380px; width: 100%; transform: scale(0.9); transition: all 0.3s ease; border: 2px solid var(--accent-green); }
+        .target-modal-overlay.active .target-modal-content { transform: scale(1); }
+        .target-modal-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; color: var(--accent-green); }
+        .target-modal-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; }
+        .target-options { display: flex; gap: 12px; margin-bottom: 16px; justify-content: center; }
+        .target-option-btn { flex: 1; aspect-ratio: 1; max-width: 90px; background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 16px; color: var(--text-primary); font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+        .target-option-btn:hover { border-color: var(--accent-green); background: var(--bg-card-hover); }
+        .target-option-btn .target-label { font-size: 11px; font-weight: 600; opacity: 0.9; }
+        .target-btn-cancel { width: 100%; padding: 12px; background: transparent; border: none; color: var(--text-muted); font-size: 14px; cursor: pointer; transition: all 0.2s ease; }
+        .target-btn-cancel:hover { color: var(--text-secondary); }
+        
+        .levelup-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.9); display: flex; align-items: center; justify-content: center; z-index: 2600; opacity: 0; visibility: hidden; transition: all 0.3s ease; padding: 20px; }
+        .levelup-modal-overlay.active { opacity: 1; visibility: visible; }
+        .levelup-modal-content { background: var(--bg-card); border-radius: 24px; padding: 40px 24px; text-align: center; max-width: 380px; width: 100%; transform: scale(0.9); transition: all 0.3s ease; border: 2px solid var(--accent-gold); position: relative; }
+        .levelup-modal-overlay.active .levelup-modal-content { transform: scale(1); }
+        .levelup-badge-large { width: 100px; height: 100px; margin: 0 auto 24px; background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: levelUpPulse 1s ease infinite; font-size: 50px; }
+        @keyframes levelUpPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        .levelup-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; color: var(--accent-gold); }
+        .levelup-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 8px; }
+        .levelup-new-title { font-size: 16px; color: var(--accent-green); font-weight: 600; margin-bottom: 24px; }
+        .levelup-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); border: none; border-radius: 16px; color: var(--bg-primary); font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+        .levelup-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4); }
+        
+        .badge-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.9); display: flex; align-items: center; justify-content: center; z-index: 2700; opacity: 0; visibility: hidden; transition: all 0.3s ease; padding: 20px; }
+        .badge-modal-overlay.active { opacity: 1; visibility: visible; }
+        .badge-modal-content { background: var(--bg-card); border-radius: 24px; padding: 40px 24px; text-align: center; max-width: 380px; width: 100%; transform: scale(0.9); transition: all 0.3s ease; border: 2px solid var(--accent-purple); position: relative; }
+        .badge-modal-overlay.active .badge-modal-content { transform: scale(1); }
+        .badge-icon-large { width: 100px; height: 100px; margin: 0 auto 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 50px; animation: badgeBounce 0.6s ease; }
+        @keyframes badgeBounce { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+.badge-icon-large.genesis { background: linear-gradient(145deg, #bbf7d0, #16a34a); border: 2px solid #22c55e; box-shadow: 0 8px 25px rgba(34,197,94,0.4), inset 0 0 15px rgba(255,255,255,0.2); }
+.badge-icon-large.seeker { background: linear-gradient(145deg, #e9d5ff, #7c3aed); border: 2px solid #8b5cf6; box-shadow: 0 8px 25px rgba(139,92,246,0.4), inset 0 0 15px rgba(255,255,255,0.2); }
+.badge-icon-large.wanderer { background: linear-gradient(145deg, #dbeafe, #2563eb); border: 2px solid #3b82f6; box-shadow: 0 8px 25px rgba(59,130,246,0.4), inset 0 0 15px rgba(255,255,255,0.2); }
+.badge-icon-large.reflector { background: linear-gradient(145deg, #fde68a, #f59e0b); border: 2px solid #fbbf24; box-shadow: 0 10px 35px rgba(245,158,11,0.5); }
+.badge-icon-large.luminary { background: linear-gradient(145deg, #5eead4, #0d9488); border: 2px solid #14b8a6; box-shadow: 0 10px 35px rgba(20,184,166,0.5); }
+.badge-icon-large.keeper { background: linear-gradient(145deg, #fdba74, #b45309); border: 2px solid #f97316; box-shadow: 0 10px 35px rgba(249,115,22,0.5); }
+.badge-icon-large.master { background: linear-gradient(145deg, #fcd34d, #b45309); border: 2px solid #fbbf24; box-shadow: 0 12px 40px rgba(251,191,36,0.6), 0 0 25px rgba(255,215,0,0.3); }
+.badge-icon-large.ascendant { background: linear-gradient(145deg, #c4b5fd, #6d28d9); border: 2px solid #8b5cf6; box-shadow: 0 12px 40px rgba(139,92,246,0.6); }
+.badge-icon-large.guardian { background: linear-gradient(145deg, #93c5fd, #1e3a8a); border: 2px solid #3b82f6; box-shadow: 0 12px 40px rgba(59,130,246,0.6); }
+.badge-icon-large.illuminator, .badge-icon-large.legacy { background: linear-gradient(145deg, #003d2e, #00c97a); border: 2px solid #00ffae; box-shadow: 0 0 20px rgba(0,255,170,0.7), 0 0 50px rgba(0,200,120,0.4); animation: emeraldPulse 3s ease-in-out infinite; }
+.badge-icon-large.endless { background: linear-gradient(145deg, #003d2e, #00ffae); border: 2px solid #00ffae; position: relative; overflow: hidden; animation: emeraldPulse 2.5s ease-in-out infinite; }
+.badge-icon-large.endless::before { content: ""; position: absolute; width: 220%; height: 220%; top: -60%; left: -60%; background: conic-gradient(from 0deg, #00ffae, #0ff, #00c97a, #006b3f, #00ffae); animation: rotateShine 6s linear infinite; opacity: 0.6; }
+.badge-icon-large.endless > * { position: relative; z-index: 2; }
+
+@keyframes emeraldPulse { 0% { box-shadow: 0 0 15px rgba(0,255,170,0.6); } 50% { box-shadow: 0 0 35px rgba(0,255,170,1); } 100% { box-shadow: 0 0 15px rgba(0,255,170,0.6); } }
+@keyframes rotateShine { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .badge-modal-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; color: var(--accent-purple); }
+        .badge-modal-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; }
+        .badge-modal-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue)); border: none; border-radius: 16px; color: var(--text-primary); font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+        .badge-modal-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(155, 89, 182, 0.4); }
+        
+        .level-detail-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.9); display: flex; align-items: center; justify-content: center; z-index: 2800; opacity: 0; visibility: hidden; transition: all 0.3s ease; padding: 20px; }
+        .level-detail-modal-overlay.active { opacity: 1; visibility: visible; }
+        .level-detail-modal-content { background: var(--bg-card); border-radius: 24px; padding: 32px 24px; text-align: center; max-width: 400px; width: 100%; transform: scale(0.9); transition: all 0.3s ease; border: 2px solid var(--accent-green); max-height: 90vh; overflow-y: auto; }
+        .level-detail-modal-overlay.active .level-detail-modal-content { transform: scale(1); }
+        .level-detail-header { margin-bottom: 24px; }
+        .level-detail-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; color: var(--accent-green); }
+        .level-detail-subtitle { font-size: 14px; color: var(--text-secondary); }
+        .exp-bar-container { background: var(--bg-primary); border-radius: 12px; padding: 4px; margin-bottom: 24px; position: relative; }
+        .exp-bar { height: 24px; background: linear-gradient(90deg, var(--accent-green), var(--accent-green-light)); border-radius: 8px; transition: width 0.5s ease; display: flex; align-items: center; justify-content: center; }
+        .exp-text { font-size: 12px; font-weight: 700; color: var(--bg-primary); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .exp-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+        .badges-section { margin-bottom: 24px; }
+        .badges-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text-primary); }
+        .badges-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .badge-item { display: flex; flex-direction: column; align-items: center; padding: 12px 8px; background: var(--bg-primary); border-radius: 12px; border: 2px solid var(--border-color); transition: all 0.2s ease; }
+        .badge-item.unlocked { border-color: var(--accent-gold); background: linear-gradient(180deg, rgba(255, 215, 0, 0.1), var(--bg-primary)); }
+        .badge-item.locked { opacity: 0.5; }
+        .badge-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 8px; }
+
+.badge-icon.genesis { background: linear-gradient(145deg, #86efac, #15803d); }
+.badge-icon.seeker { background: linear-gradient(145deg, #d8b4fe, #6d28d9); }
+.badge-icon.wanderer { background: linear-gradient(145deg, #bfdbfe, #1e40af); }
+.badge-icon.reflector { background: linear-gradient(145deg, #fde047, #f59e0b); animation: shimmerGold 4s linear infinite; }
+.badge-icon.luminary { background: linear-gradient(145deg, #67e8f9, #0369a1); animation: shimmerBlue 4s linear infinite; }
+.badge-icon.keeper { background: linear-gradient(145deg, #fdba74, #9a3412); animation: shimmerCopper 4s linear infinite; }
+.badge-icon.master { background: linear-gradient(145deg, #facc15, #b45309); animation: shimmerGold 3s linear infinite; }
+.badge-icon.ascendant { background: linear-gradient(145deg, #c4b5fd, #5b21b6); animation: shimmerPurple 4s linear infinite; }
+.badge-icon.guardian { background: linear-gradient(145deg, #93c5fd, #1e3a8a); animation: shimmerBlue 3.5s linear infinite; }
+.badge-icon.illuminator { background: linear-gradient(145deg, #003d2e, #00c97a); box-shadow: 0 0 15px rgba(0,255,170,0.7), 0 0 40px rgba(0,200,120,0.4); animation: emeraldPulse 2.5s ease-in-out infinite; }
+.badge-icon.legacy { background: linear-gradient(145deg, #7f1d1d, #dc2626); box-shadow: 0 0 15px rgba(255,0,60,0.7), 0 0 45px rgba(220,38,38,0.5); animation: rubyFlare 2s ease-in-out infinite; }
+.badge-icon.endless { position: relative; overflow: hidden; border-radius: 50%; background: radial-gradient(circle at center, #1a002b, #000); box-shadow: 0 0 25px rgba(186,85,255,0.9), 0 0 60px rgba(148,0,211,0.8), 0 0 120px rgba(128,0,255,0.5); animation: infinityPulse 2s ease-in-out infinite; }
+.badge-icon.endless::before { content: ""; position: absolute; width: 260%; height: 260%; top: -80%; left: -80%; background: conic-gradient(from 0deg, #9400D3, #BA55FF, #8A2BE2, #DA70D6, #9400D3); animation: infinityRotate 4s linear infinite; opacity: 0.7; }
+.badge-icon.endless > * { position: relative; z-index: 5; }
+
+@keyframes infinityPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+@keyframes infinityRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes shimmerGold { 0% { filter: brightness(1); } 50% { filter: brightness(1.25); } 100% { filter: brightness(1); } }
+@keyframes shimmerBlue { 0% { filter: brightness(1); } 50% { filter: brightness(1.3); } 100% { filter: brightness(1); } }
+@keyframes shimmerCopper { 0% { filter: brightness(1); } 50% { filter: brightness(1.25); } 100% { filter: brightness(1); } }
+@keyframes shimmerPurple { 0% { filter: brightness(1); } 50% { filter: brightness(1.3); } 100% { filter: brightness(1); } }
+@keyframes emeraldPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes rubyFlare { 0%,100% { transform: scale(1); box-shadow: 0 0 15px rgba(255,0,60,0.7); } 50% { transform: scale(1.1); box-shadow: 0 0 40px rgba(255,0,60,1); } }
+        .badge-name { font-size: 10px; font-weight: 600; color: var(--text-primary); text-align: center; }
+        .badge-level { font-size: 9px; color: var(--text-secondary); margin-top: 2px; }
+        .level-detail-close { width: 100%; padding: 16px; background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 16px; color: var(--text-primary); font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+        .level-detail-close:hover { border-color: var(--accent-green); }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .session-item { animation: fadeIn 0.3s ease forwards; }
+        .day-card.today { animation: pulse 2s ease infinite; }
+        .session-item:nth-child(1) { animation-delay: 0.05s; } .session-item:nth-child(2) { animation-delay: 0.1s; } .session-item:nth-child(3) { animation-delay: 0.15s; } .session-item:nth-child(4) { animation-delay: 0.2s; } .session-item:nth-child(5) { animation-delay: 0.25s; } .session-item:nth-child(6) { animation-delay: 0.3s; } .session-item:nth-child(7) { animation-delay: 0.35s; } .session-item:nth-child(8) { animation-delay: 0.4s; } .session-item:nth-child(9) { animation-delay: 0.45s; } .session-item:nth-child(10) { animation-delay: 0.5s; }
+    </style>
+</head>
+<body>
+    <canvas id="confettiCanvas"></canvas>
+    <div class="setup-screen" id="setupScreen">
+        <div class="setup-logo"><img src="assets/quran-icon.png" alt="Quran Icon"></div>
+        <h1 class="setup-title">Qur'an Tracker</h1>
+        <p class="setup-subtitle">Jadwal Khatam Qur'an</p>
+        <div class="setup-form">
+            <div class="input-group">
+                <label class="input-label">Tanggal Mulai</label>
+                <input type="date" class="date-input" id="startDateInput">
+            </div>
+            <label class="quick-days-label">Pilih Durasi</label>
+            <div class="quick-days-container">
+                <button class="quick-day-btn" data-days="30"><span>30</span><span class="days-label">hari</span></button>
+                <button class="quick-day-btn selected" data-days="60"><span>60</span><span class="days-label">hari</span></button>
+                <button class="quick-day-btn" data-days="300"><span>300</span><span class="days-label">hari</span></button>
+            </div>
+            <button class="start-btn" id="startBtn" disabled>Mulai Perjalanan</button>
+        </div>
+        <div class="brand-logo-bottom"><img src="assets/brand-logo.png" alt="Alka Brand"></div>
+    </div>
+    <div class="main-app" id="mainApp">
+        <header class="app-header">
+            <div class="header-top">
+                <div class="header-left">
+                    <div class="header-logo">
+                        <div class="header-icon"><img src="assets/quran-icon.png" alt="Quran Icon"></div>
+                        <span class="header-title">Qur'an Tracker</span>
+                    </div>
+                </div>
+                <div class="header-progress">
+                    <div class="level-badge" id="levelBadge">
+                        <div class="level-circle-container">
+                            <div class="level-circle">
+                                <span class="level-number" id="levelNumber">1</span>
+                            </div>
+                            <div class="level-info">
+                                <span class="level-label">Level</span>
+                                <span class="level-badge-icon" id="currentBadgeIcon">🌱</span>
+                            </div>
+                        </div>
+                        <div class="level-progress-mini">
+                            <div class="level-progress-fill" id="levelProgressFill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="date-info-wrapper">
+                <div class="date-info">
+                    <div class="date-info-item"><span class="date-info-label">Mulai</span><span class="date-info-value" id="startDateDisplay">-</span></div>
+                    <div class="date-info-item"><span class="date-info-label">Estimasi Selesai</span><span class="date-info-value" id="endDateDisplay">-</span></div>
+                    <div class="date-info-item"><span class="date-info-label">Sisa Hari</span><span class="date-info-value" id="daysLeftDisplay">-</span></div>
+                </div>
+                <div class="date-info-progress-bg"></div>
+                <div class="date-info-progress" id="dateInfoProgress" style="width: 0%"></div>
+            </div>
+        </header>
+        <section class="calendar-section">
+            <div class="calendar-header">
+                <h2 class="calendar-title" id="calendarTitle">Jadwal 60 Hari</h2>
+                <div class="calendar-nav">
+                    <button class="nav-btn" id="scrollLeft"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                    <button class="nav-btn" id="scrollRight"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                </div>
+            </div>
+            <div class="calendar-scroll" id="calendarScroll"></div>
+        </section>
+        <section class="session-panel" id="sessionPanel">
+            <div class="empty-state" id="emptyState">
+                <div class="empty-state-icon"><img src="assets/quran-icon.png" alt="Quran Icon"></div>
+                <p class="empty-state-text">Pilih tanggal untuk melihat jadwal bacaan</p>
+            </div>
+            <div id="sessionContent" style="display: none;">
+                <div class="session-panel-header">
+                    <div><h3 class="session-panel-title" id="panelTitle">Hari 1</h3><p class="session-panel-subtitle" id="panelSubtitle">5 sesi membaca</p></div>
+                    <div class="session-stats"><div class="session-stat"><div class="session-stat-value" id="completedCount">0/5</div><div class="session-stat-label">Selesai</div></div></div>
+                </div>
+                <div class="swipe-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>Geser ke kiri/kanan untuk pindah hari<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+                <div class="session-list-container"><div class="session-list" id="sessionList"></div></div>
+            </div>
+        </section>
+        <div class="fab-container">
+            <button class="fab-main" id="fabMain" title="Menu"><img src="assets/brand-logo.png" alt="Menu"></button>
+            <div class="fab-menu">
+                <a href="https://alkablogz.myr.id/support" target="_blank" class="fab-btn fab-donate" title="Donasi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></a>
+                <button class="fab-btn fab-surah" id="surahListBtn" title="Daftar Surah"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg></button>
+                <button class="fab-btn fab-reset" id="resetBtn" title="Reset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg></button>
+            </div>
+        </div>
+    </div>
+    <div class="reader-overlay" id="readerOverlay">
+        <div class="reader-header">
+            <div class="reader-title-section"><div class="reader-title" id="readerTitle">Surah Name</div><div class="reader-subtitle" id="readerSubtitle">Ayat 1-10</div></div>
+            <div class="reader-controls">
+                <button class="reader-btn font-size-btn" id="fontSizeBtn" title="Ukuran Font">
+                    <span class="font-small">A</span><span class="font-large">A</span>
+                </button>
+                <button class="reader-btn" id="modeSwitchBtn" title="Mode Mushaf">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                </button>
+                <button class="reader-close" id="readerClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+        </div>
+        <div class="reader-content mode-list font-normal" id="readerContent"></div>
+        <div class="reader-complete-section" id="readerCompleteSection">
+            <button class="btn-complete-reading" id="btnCompleteReading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Selesaikan Sesi</button>
+        </div>
+    </div>
+    <div class="modal-overlay" id="successModal">
+        <div class="modal-content khatam-modal">
+            <div class="modal-icon"><img src="assets/quran-icon.png" alt="Success"></div>
+            <h2 class="modal-title">Khatamallahu Lakum bil Khair</h2>
+            <p class="modal-subtitle">Selamat! Anda telah menyelesaikan khatam Al-Qur'an. Semoga Allah menerima amal ibadah kita semua.</p>
+            <button class="modal-btn" id="closeModalBtn">Tutup</button>
+        </div>
+    </div>
+    <div class="daily-modal-overlay" id="dailyModal">
+        <div class="daily-modal-content">
+            <div class="daily-modal-icon"><img src="assets/quran-icon.png" alt="Daily Complete"></div>
+            <h2 class="daily-modal-title">Alhamdulillah!</h2>
+            <p class="daily-modal-doa-arabic">اللَّهُمَّ بَارِكْ لَنَا فِي الْقُرْآنِ وَتَقَبَّلْ تِلَاوَتَنَا</p>
+            <p class="daily-modal-doa-latin">Ya Allah, berkahilah kami dengan Al-Qur'an dan terimalah bacaan kami.</p>
+            <button class="daily-modal-btn" id="closeDailyModalBtn">Lanjutkan</button>
+        </div>
+    </div>
+    <div class="reset-modal-overlay" id="resetModal">
+        <div class="reset-modal-content">
+            <div class="reset-modal-icon"><img src="assets/quran-icon.png" alt="Reset"></div>
+            <h2 class="reset-modal-title">Mulai Khatam Baru?</h2>
+            <p class="reset-modal-subtitle">Pilih opsi untuk memulai khatam baru dengan target yang sesuai.</p>
+            <div class="reset-modal-buttons">
+                <button class="reset-btn-primary" id="continueBtn">Lanjutkan</button>
+                <button class="reset-btn-secondary" id="changeTargetBtn">Ubah Target</button>
+                <button class="reset-btn-cancel" id="cancelResetBtn">Batal</button>
+            </div>
+        </div>
+    </div>
+    <div class="target-modal-overlay" id="targetModal">
+        <div class="target-modal-content">
+            <h2 class="target-modal-title">Pilih Target Baru</h2>
+            <p class="target-modal-subtitle">Pilih durasi khatam yang diinginkan</p>
+            <div class="target-options">
+                <button class="target-option-btn" data-days="30"><span>30</span><span class="target-label">hari</span></button>
+                <button class="target-option-btn" data-days="60"><span>60</span><span class="target-label">hari</span></button>
+                <button class="target-option-btn" data-days="300"><span>300</span><span class="target-label">hari</span></button>
+            </div>
+            <button class="target-btn-cancel" id="cancelTargetBtn">Batal</button>
+        </div>
+    </div>
+
+    <audio id="khatamSound" preload="auto"><source src="assets/khatam.mp3" type="audio/mpeg"></audio>
+    <audio id="badgeSound" preload="auto"><source src="assets/badgeunlocked.mp3" type="audio/mpeg"></audio>
+    <audio id="levelUpSound" preload="auto"><source src="assets/levelup.mp3" type="audio/mpeg"></audio>
+    <audio id="finishSound" preload="auto"><source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" type="audio/ogg"></audio>
+
+    <div class="levelup-modal-overlay" id="levelupModal">
+        <div class="levelup-modal-content">
+            <div class="levelup-badge-large" id="levelupBadgeIcon">🌱</div>
+            <h2 class="levelup-title">Level Up!</h2>
+            <p class="levelup-subtitle">Selamat! Anda naik ke level</p>
+            <p class="levelup-new-title" id="levelupNewTitle">Level 2 - Seeker</p>
+            <button class="levelup-btn" id="closeLevelupBtn">Lanjutkan</button>
+        </div>
+    </div>
+    
+    <div class="badge-modal-overlay" id="badgeModal">
+        <div class="badge-modal-content">
+            <div class="badge-icon-large" id="badgeIconLarge">🏆</div>
+            <h2 class="badge-modal-title" id="badgeModalTitle">Badge Terbuka!</h2>
+            <p class="badge-modal-subtitle" id="badgeModalSubtitle">Anda telah mencapai level 10 dan mendapatkan badge Genesis!</p>
+            <button class="badge-modal-btn" id="closeBadgeBtn">Lanjutkan</button>
+        </div>
+    </div>
+    
+    <div class="level-detail-modal-overlay" id="levelDetailModal">
+        <div class="level-detail-modal-content">
+            <div class="level-detail-header">
+                <h2 class="level-detail-title">Progress Level</h2>
+                <p class="level-detail-subtitle">Tetap semangat membaca Al-Qur'an!</p>
+            </div>
+            <div class="exp-bar-container">
+                <div class="exp-bar" id="expBar" style="width: 0%">
+                    <span class="exp-text" id="expText">0 / 100 EXP</span>
+                </div>
+            </div>
+            <div class="exp-info">
+                <span>Level <span id="detailCurrentLevel">1</span></span>
+                <span>Level <span id="detailNextLevel">2</span></span>
+            </div>
+            <div class="badges-section">
+                <h3 class="badges-title">Achievement Badges</h3>
+                <div class="badges-grid" id="badgesGrid"></div>
+            </div>
+            <button class="level-detail-close" id="closeLevelDetailBtn">Tutup</button>
+        </div>
+    </div>
+    
+    <div class="surah-sheet-overlay" id="surahSheetOverlay">
+        <div class="surah-sheet">
+            <div class="surah-sheet-header"><h3 class="surah-sheet-title">Daftar Surah (1-114)</h3><button class="surah-sheet-close" id="surahSheetClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+            <div class="surah-sheet-content"><div class="surah-list-grid" id="surahListGrid"></div></div>
+        </div>
+    </div>
+    <script>
+      
+                const surahInfo = [{ number: 1, name: "Al-Fatihah", arabicName: "الفاتحة", verses: 7, type: "Makkiyah" },{ number: 2, name: "Al-Baqarah", arabicName: "البقرة", verses: 286, type: "Madaniyah" },{ number: 3, name: "Ali 'Imran", arabicName: "آل عمران", verses: 200, type: "Madaniyah" },{ number: 4, name: "An-Nisa", arabicName: "النساء", verses: 176, type: "Madaniyah" },{ number: 5, name: "Al-Ma'idah", arabicName: "المائدة", verses: 120, type: "Madaniyah" },{ number: 6, name: "Al-An'am", arabicName: "الأنعام", verses: 165, type: "Makkiyah" },{ number: 7, name: "Al-A'raf", arabicName: "الأعراف", verses: 206, type: "Makkiyah" },{ number: 8, name: "Al-Anfal", arabicName: "الأنفال", verses: 75, type: "Madaniyah" },{ number: 9, name: "At-Tawbah", arabicName: "التوبة", verses: 129, type: "Madaniyah" },{ number: 10, name: "Yunus", arabicName: "يونس", verses: 109, type: "Makkiyah" },{ number: 11, name: "Hud", arabicName: "هود", verses: 123, type: "Makkiyah" },{ number: 12, name: "Yusuf", arabicName: "يوسف", verses: 111, type: "Makkiyah" },{ number: 13, name: "Ar-Ra'd", arabicName: "الرعد", verses: 43, type: "Madaniyah" },{ number: 14, name: "Ibrahim", arabicName: "إبراهيم", verses: 52, type: "Makkiyah" },{ number: 15, name: "Al-Hijr", arabicName: "الحجر", verses: 99, type: "Makkiyah" },{ number: 16, name: "An-Nahl", arabicName: "النحل", verses: 128, type: "Makkiyah" },{ number: 17, name: "Al-Isra", arabicName: "الإسراء", verses: 111, type: "Makkiyah" },{ number: 18, name: "Al-Kahf", arabicName: "الكهف", verses: 110, type: "Makkiyah" },{ number: 19, name: "Maryam", arabicName: "مريم", verses: 98, type: "Makkiyah" },{ number: 20, name: "Ta-Ha", arabicName: "طه", verses: 135, type: "Makkiyah" },{ number: 21, name: "Al-Anbiya", arabicName: "الأنبياء", verses: 112, type: "Makkiyah" },{ number: 22, name: "Al-Hajj", arabicName: "الحج", verses: 78, type: "Madaniyah" },{ number: 23, name: "Al-Mu'minun", arabicName: "المؤمنون", verses: 118, type: "Makkiyah" },{ number: 24, name: "An-Nur", arabicName: "النور", verses: 64, type: "Madaniyah" },{ number: 25, name: "Al-Furqan", arabicName: "الفرقان", verses: 77, type: "Makkiyah" },{ number: 26, name: "Ash-Shu'ara", arabicName: "الشعراء", verses: 227, type: "Makkiyah" },{ number: 27, name: "An-Naml", arabicName: "النمل", verses: 93, type: "Makkiyah" },{ number: 28, name: "Al-Qasas", arabicName: "القصص", verses: 88, type: "Makkiyah" },{ number: 29, name: "Al-'Ankabut", arabicName: "العنكبوت", verses: 69, type: "Makkiyah" },{ number: 30, name: "Ar-Rum", arabicName: "الروم", verses: 60, type: "Makkiyah" },{ number: 31, name: "Luqman", arabicName: "لقمان", verses: 34, type: "Makkiyah" },{ number: 32, name: "As-Sajdah", arabicName: "السجدة", verses: 30, type: "Makkiyah" },{ number: 33, name: "Al-Ahzab", arabicName: "الأحزاب", verses: 73, type: "Madaniyah" },{ number: 34, name: "Saba", arabicName: "سبأ", verses: 54, type: "Makkiyah" },{ number: 35, name: "Fatir", arabicName: "فاطر", verses: 45, type: "Makkiyah" },{ number: 36, name: "Ya-Sin", arabicName: "يس", verses: 83, type: "Makkiyah" },{ number: 37, name: "As-Saffat", arabicName: "الصافات", verses: 182, type: "Makkiyah" },{ number: 38, name: "Sad", arabicName: "ص", verses: 88, type: "Makkiyah" },{ number: 39, name: "Az-Zumar", arabicName: "الزمر", verses: 75, type: "Makkiyah" },{ number: 40, name: "Ghafir", arabicName: "غافر", verses: 85, type: "Makkiyah" },{ number: 41, name: "Fussilat", arabicName: "فصلت", verses: 54, type: "Makkiyah" },{ number: 42, name: "Ash-Shura", arabicName: "الشورى", verses: 53, type: "Makkiyah" },{ number: 43, name: "Az-Zukhruf", arabicName: "الزخرف", verses: 89, type: "Makkiyah" },{ number: 44, name: "Ad-Dukhan", arabicName: "الدخان", verses: 59, type: "Makkiyah" },{ number: 45, name: "Al-Jathiyah", arabicName: "الجاثية", verses: 37, type: "Makkiyah" },{ number: 46, name: "Al-Ahqaf", arabicName: "الأحقاف", verses: 35, type: "Makkiyah" },{ number: 47, name: "Muhammad", arabicName: "محمد", verses: 38, type: "Madaniyah" },{ number: 48, name: "Al-Fath", arabicName: "الفتح", verses: 29, type: "Madaniyah" },{ number: 49, name: "Al-Hujurat", arabicName: "الحجرات", verses: 18, type: "Madaniyah" },{ number: 50, name: "Qaf", arabicName: "ق", verses: 45, type: "Makkiyah" },{ number: 51, name: "Adh-Dhariyat", arabicName: "الذاريات", verses: 60, type: "Makkiyah" },{ number: 52, name: "At-Tur", arabicName: "الطور", verses: 49, type: "Makkiyah" },{ number: 53, name: "An-Najm", arabicName: "النجم", verses: 62, type: "Makkiyah" },{ number: 54, name: "Al-Qamar", arabicName: "القمر", verses: 55, type: "Makkiyah" },{ number: 55, name: "Ar-Rahman", arabicName: "الرحمن", verses: 78, type: "Madaniyah" },{ number: 56, name: "Al-Waqi'ah", arabicName: "الواقعة", verses: 96, type: "Makkiyah" },{ number: 57, name: "Al-Hadid", arabicName: "الحديد", verses: 29, type: "Madaniyah" },{ number: 58, name: "Al-Mujadilah", arabicName: "المجادلة", verses: 22, type: "Madaniyah" },{ number: 59, name: "Al-Hashr", arabicName: "الحشر", verses: 24, type: "Madaniyah" },{ number: 60, name: "Al-Mumtahanah", arabicName: "الممتحنة", verses: 13, type: "Madaniyah" },{ number: 61, name: "As-Saff", arabicName: "الصف", verses: 14, type: "Madaniyah" },{ number: 62, name: "Al-Jumu'ah", arabicName: "الجمعة", verses: 11, type: "Madaniyah" },{ number: 63, name: "Al-Munafiqun", arabicName: "المنافقون", verses: 11, type: "Madaniyah" },{ number: 64, name: "At-Taghabun", arabicName: "التغابن", verses: 18, type: "Madaniyah" },{ number: 65, name: "At-Talaq", arabicName: "الطلاق", verses: 12, type: "Madaniyah" },{ number: 66, name: "At-Tahrim", arabicName: "التحريم", verses: 12, type: "Madaniyah" },{ number: 67, name: "Al-Mulk", arabicName: "الملك", verses: 30, type: "Makkiyah" },{ number: 68, name: "Al-Qalam", arabicName: "القلم", verses: 52, type: "Makkiyah" },{ number: 69, name: "Al-Haqqah", arabicName: "الحاقة", verses: 52, type: "Makkiyah" },{ number: 70, name: "Al-Ma'arij", arabicName: "المعارج", verses: 44, type: "Makkiyah" },{ number: 71, name: "Nuh", arabicName: "نوح", verses: 28, type: "Makkiyah" },{ number: 72, name: "Al-Jinn", arabicName: "الجن", verses: 28, type: "Makkiyah" },{ number: 73, name: "Al-Muzzammil", arabicName: "المزمل", verses: 20, type: "Makkiyah" },{ number: 74, name: "Al-Muddaththir", arabicName: "المدثر", verses: 56, type: "Makkiyah" },{ number: 75, name: "Al-Qiyamah", arabicName: "القيامة", verses: 40, type: "Makkiyah" },{ number: 76, name: "Al-Insan", arabicName: "الإنسان", verses: 31, type: "Madaniyah" },{ number: 77, name: "Al-Mursalat", arabicName: "المرسلات", verses: 50, type: "Makkiyah" },{ number: 78, name: "An-Naba", arabicName: "النبأ", verses: 40, type: "Makkiyah" },{ number: 79, name: "An-Nazi'at", arabicName: "النازعات", verses: 46, type: "Makkiyah" },{ number: 80, name: "'Abasa", arabicName: "عبس", verses: 42, type: "Makkiyah" },{ number: 81, name: "At-Takwir", arabicName: "التكوير", verses: 29, type: "Makkiyah" },{ number: 82, name: "Al-Infitar", arabicName: "الإنفطار", verses: 19, type: "Makkiyah" },{ number: 83, name: "Al-Mutaffifin", arabicName: "المطففين", verses: 36, type: "Makkiyah" },{ number: 84, name: "Al-Inshiqaq", arabicName: "الإنشقاق", verses: 25, type: "Makkiyah" },{ number: 85, name: "Al-Buruj", arabicName: "البروج", verses: 22, type: "Makkiyah" },{ number: 86, name: "At-Tariq", arabicName: "الطارق", verses: 17, type: "Makkiyah" },{ number: 87, name: "Al-A'la", arabicName: "الأعلى", verses: 19, type: "Makkiyah" },{ number: 88, name: "Al-Ghashiyah", arabicName: "الغاشية", verses: 26, type: "Makkiyah" },{ number: 89, name: "Al-Fajr", arabicName: "الفجر", verses: 30, type: "Makkiyah" },{ number: 90, name: "Al-Balad", arabicName: "البلد", verses: 20, type: "Makkiyah" },{ number: 91, name: "Ash-Shams", arabicName: "الشمس", verses: 15, type: "Makkiyah" },{ number: 92, name: "Al-Layl", arabicName: "الليل", verses: 21, type: "Makkiyah" },{ number: 93, name: "Ad-Duha", arabicName: "الضحى", verses: 11, type: "Makkiyah" },{ number: 94, name: "Ash-Sharh", arabicName: "الشرح", verses: 8, type: "Makkiyah" },{ number: 95, name: "At-Tin", arabicName: "التين", verses: 8, type: "Makkiyah" },{ number: 96, name: "Al-'Alaq", arabicName: "العلق", verses: 19, type: "Makkiyah" },{ number: 97, name: "Al-Qadr", arabicName: "القدر", verses: 5, type: "Makkiyah" },{ number: 98, name: "Al-Bayyinah", arabicName: "البينة", verses: 8, type: "Madaniyah" },{ number: 99, name: "Az-Zalzalah", arabicName: "الزلزلة", verses: 8, type: "Madaniyah" },{ number: 100, name: "Al-'Adiyat", arabicName: "العاديات", verses: 11, type: "Makkiyah" },{ number: 101, name: "Al-Qari'ah", arabicName: "القارعة", verses: 11, type: "Makkiyah" },{ number: 102, name: "At-Takathur", arabicName: "التكاثر", verses: 8, type: "Makkiyah" },{ number: 103, name: "Al-'Asr", arabicName: "العصر", verses: 3, type: "Makkiyah" },{ number: 104, name: "Al-Humazah", arabicName: "الهمزة", verses: 9, type: "Makkiyah" },{ number: 105, name: "Al-Fil", arabicName: "الفيل", verses: 5, type: "Makkiyah" },{ number: 106, name: "Quraysh", arabicName: "قريش", verses: 4, type: "Makkiyah" },{ number: 107, name: "Al-Ma'un", arabicName: "الماعون", verses: 7, type: "Makkiyah" },{ number: 108, name: "Al-Kawthar", arabicName: "الكوثر", verses: 3, type: "Makkiyah" },{ number: 109, name: "Al-Kafirun", arabicName: "الكافرون", verses: 6, type: "Makkiyah" },{ number: 110, name: "An-Nasr", arabicName: "النصر", verses: 3, type: "Madaniyah" },{ number: 111, name: "Al-Masad", arabicName: "المسد", verses: 5, type: "Makkiyah" },{ number: 112, name: "Al-Ikhlas", arabicName: "الإخلاص", verses: 4, type: "Makkiyah" },{ number: 113, name: "Al-Falaq", arabicName: "الفلق", verses: 5, type: "Makkiyah" },{ number: 114, name: "An-Nas", arabicName: "الناس", verses: 6, type: "Makkiyah" }];
+
+        function createSession(pages, surahRanges) {
+            const readingParts = surahRanges.map(r => { 
+                const surah = surahInfo.find(s => s.number === r.surah); 
+                return `<span class='surah-name'>${surah.name}</span> (${r.startAyah}-${r.endAyah})`; 
+            });
+            return { pages: pages, surahRanges: surahRanges, reading: readingParts.join(' - ') };
+        }
+
+        // Schedule data (60 days)
+      const completeQuranSchedule = [{ day: 1, sessions: [createSession("1-2", [{surah: 1, startAyah: 1, endAyah: 7}, {surah: 2, startAyah: 1, endAyah: 5}]), createSession("3-4", [{surah: 2, startAyah: 6, endAyah: 24}]), createSession("5-6", [{surah: 2, startAyah: 25, endAyah: 37}]), createSession("7-8", [{surah: 2, startAyah: 38, endAyah: 57}]), createSession("9-10", [{surah: 2, startAyah: 58, endAyah: 69}])] },{ day: 2, sessions: [createSession("11-12", [{surah: 2, startAyah: 70, endAyah: 83}]), createSession("13-14", [{surah: 2, startAyah: 84, endAyah: 93}]), createSession("15-16", [{surah: 2, startAyah: 94, endAyah: 105}]), createSession("17-18", [{surah: 2, startAyah: 106, endAyah: 119}]), createSession("19-20", [{surah: 2, startAyah: 120, endAyah: 134}])] },{ day: 3, sessions: [createSession("21-22", [{surah: 2, startAyah: 135, endAyah: 145}]), createSession("23-24", [{surah: 2, startAyah: 146, endAyah: 163}]), createSession("25-26", [{surah: 2, startAyah: 164, endAyah: 176}]), createSession("27-28", [{surah: 2, startAyah: 177, endAyah: 186}]), createSession("29-30", [{surah: 2, startAyah: 187, endAyah: 196}])] },{ day: 4, sessions: [createSession("31-32", [{surah: 2, startAyah: 197, endAyah: 210}]), createSession("33-34", [{surah: 2, startAyah: 211, endAyah: 219}]), createSession("35-36", [{surah: 2, startAyah: 220, endAyah: 230}]), createSession("37-38", [{surah: 2, startAyah: 231, endAyah: 237}]), createSession("39-40", [{surah: 2, startAyah: 238, endAyah: 248}])] },{ day: 5, sessions: [createSession("41-42", [{surah: 2, startAyah: 249, endAyah: 256}]), createSession("43-44", [{surah: 2, startAyah: 257, endAyah: 264}]), createSession("45-46", [{surah: 2, startAyah: 265, endAyah: 274}]), createSession("47-48", [{surah: 2, startAyah: 275, endAyah: 282}]), createSession("49-50", [{surah: 2, startAyah: 283, endAyah: 286}, {surah: 3, startAyah: 1, endAyah: 9}])] },{ day: 6, sessions: [createSession("51-52", [{surah: 3, startAyah: 10, endAyah: 22}]), createSession("53-54", [{surah: 3, startAyah: 23, endAyah: 37}]), createSession("55-56", [{surah: 3, startAyah: 38, endAyah: 52}]), createSession("57-58", [{surah: 3, startAyah: 53, endAyah: 70}]), createSession("59-60", [{surah: 3, startAyah: 71, endAyah: 83}])] },{ day: 7, sessions: [createSession("61-62", [{surah: 3, startAyah: 84, endAyah: 100}]), createSession("63-64", [{surah: 3, startAyah: 101, endAyah: 115}]), createSession("65-66", [{surah: 3, startAyah: 116, endAyah: 132}]), createSession("67-68", [{surah: 3, startAyah: 133, endAyah: 148}]), createSession("69-70", [{surah: 3, startAyah: 149, endAyah: 157}])] },{ day: 8, sessions: [createSession("71-72", [{surah: 3, startAyah: 158, endAyah: 173}]), createSession("73-74", [{surah: 3, startAyah: 174, endAyah: 186}]), createSession("75-76", [{surah: 3, startAyah: 187, endAyah: 200}]), createSession("77-78", [{surah: 4, startAyah: 1, endAyah: 11}]), createSession("79-80", [{surah: 4, startAyah: 12, endAyah: 19}])] },{ day: 9, sessions: [createSession("81-82", [{surah: 4, startAyah: 20, endAyah: 26}]), createSession("83-84", [{surah: 4, startAyah: 27, endAyah: 37}]), createSession("85-86", [{surah: 4, startAyah: 38, endAyah: 51}]), createSession("87-88", [{surah: 4, startAyah: 52, endAyah: 65}]), createSession("89-90", [{surah: 4, startAyah: 66, endAyah: 79}])] },{ day: 10, sessions: [createSession("91-92", [{surah: 4, startAyah: 80, endAyah: 91}]), createSession("93-94", [{surah: 4, startAyah: 92, endAyah: 101}]), createSession("95-96", [{surah: 4, startAyah: 102, endAyah: 113}]), createSession("97-98", [{surah: 4, startAyah: 114, endAyah: 127}]), createSession("99-100", [{surah: 4, startAyah: 128, endAyah: 140}])] },{ day: 11, sessions: [createSession("101-102", [{surah: 4, startAyah: 141, endAyah: 154}]), createSession("103-104", [{surah: 4, startAyah: 155, endAyah: 170}]), createSession("105-106", [{surah: 4, startAyah: 171, endAyah: 176}, {surah: 5, startAyah: 1, endAyah: 2}]), createSession("107-108", [{surah: 5, startAyah: 3, endAyah: 3}]), createSession("109-110", [{surah: 5, startAyah: 10, endAyah: 17}])] },{ day: 12, sessions: [createSession("111-112", [{surah: 5, startAyah: 18, endAyah: 31}]), createSession("113-114", [{surah: 5, startAyah: 32, endAyah: 41}]), createSession("115-116", [{surah: 5, startAyah: 42, endAyah: 50}]), createSession("117-118", [{surah: 5, startAyah: 51, endAyah: 64}]), createSession("119-120", [{surah: 5, startAyah: 65, endAyah: 76}])] },{ day: 13, sessions: [createSession("121-122", [{surah: 5, startAyah: 77, endAyah: 89}]), createSession("123-124", [{surah: 5, startAyah: 90, endAyah: 103}]), createSession("125-126", [{surah: 5, startAyah: 104, endAyah: 113}]), createSession("127-128", [{surah: 5, startAyah: 114, endAyah: 120}, {surah: 6, startAyah: 1, endAyah: 8}]), createSession("129-130", [{surah: 6, startAyah: 9, endAyah: 27}])] },{ day: 14, sessions: [createSession("131-132", [{surah: 6, startAyah: 28, endAyah: 44}]), createSession("133-134", [{surah: 6, startAyah: 45, endAyah: 59}]), createSession("135-136", [{surah: 6, startAyah: 60, endAyah: 73}]), createSession("137-138", [{surah: 6, startAyah: 74, endAyah: 90}]), createSession("139-140", [{surah: 6, startAyah: 91, endAyah: 101}])] },{ day: 15, sessions: [createSession("141-142", [{surah: 6, startAyah: 102, endAyah: 118}]), createSession("143-144", [{surah: 6, startAyah: 119, endAyah: 131}]), createSession("145-146", [{surah: 6, startAyah: 132, endAyah: 142}]), createSession("147-148", [{surah: 6, startAyah: 143, endAyah: 151}]), createSession("149-150", [{surah: 6, startAyah: 152, endAyah: 165}])] },{ day: 16, sessions: [createSession("151-152", [{surah: 7, startAyah: 1, endAyah: 22}]), createSession("153-154", [{surah: 7, startAyah: 23, endAyah: 37}]), createSession("155-156", [{surah: 7, startAyah: 38, endAyah: 51}]), createSession("157-158", [{surah: 7, startAyah: 52, endAyah: 67}]), createSession("159-160", [{surah: 7, startAyah: 68, endAyah: 81}])] },{ day: 17, sessions: [createSession("161-162", [{surah: 7, startAyah: 82, endAyah: 95}]), createSession("163-164", [{surah: 7, startAyah: 96, endAyah: 120}]), createSession("165-166", [{surah: 7, startAyah: 121, endAyah: 137}]), createSession("167-168", [{surah: 7, startAyah: 138, endAyah: 149}]), createSession("169-170", [{surah: 7, startAyah: 150, endAyah: 159}])] },{ day: 18, sessions: [createSession("171-172", [{surah: 7, startAyah: 160, endAyah: 170}]), createSession("173-174", [{surah: 7, startAyah: 171, endAyah: 187}]), createSession("175-176", [{surah: 7, startAyah: 188, endAyah: 206}]), createSession("177-178", [{surah: 8, startAyah: 1, endAyah: 16}]), createSession("179-180", [{surah: 8, startAyah: 17, endAyah: 33}])] },{ day: 19, sessions: [createSession("181-182", [{surah: 8, startAyah: 34, endAyah: 45}]), createSession("183-184", [{surah: 8, startAyah: 46, endAyah: 61}]), createSession("185-186", [{surah: 8, startAyah: 62, endAyah: 75}]), createSession("187-188", [{surah: 9, startAyah: 1, endAyah: 13}]), createSession("189-190", [{surah: 9, startAyah: 14, endAyah: 26}])] },{ day: 20, sessions: [createSession("191-192", [{surah: 9, startAyah: 27, endAyah: 36}]), createSession("193-194", [{surah: 9, startAyah: 37, endAyah: 47}]), createSession("195-196", [{surah: 9, startAyah: 48, endAyah: 61}]), createSession("197-198", [{surah: 9, startAyah: 62, endAyah: 72}]), createSession("199-200", [{surah: 9, startAyah: 73, endAyah: 86}])] },{ day: 21, sessions: [createSession("201-202", [{surah: 9, startAyah: 87, endAyah: 99}]), createSession("203-204", [{surah: 9, startAyah: 100, endAyah: 111}]), createSession("205-206", [{surah: 9, startAyah: 112, endAyah: 122}]), createSession("207-208", [{surah: 9, startAyah: 123, endAyah: 129}, {surah: 10, startAyah: 1, endAyah: 6}]), createSession("209-210", [{surah: 10, startAyah: 7, endAyah: 20}])] },{ day: 22, sessions: [createSession("211-212", [{surah: 10, startAyah: 21, endAyah: 33}]), createSession("213-214", [{surah: 10, startAyah: 34, endAyah: 53}]), createSession("215-216", [{surah: 10, startAyah: 54, endAyah: 70}]), createSession("217-218", [{surah: 10, startAyah: 71, endAyah: 88}]), createSession("219-220", [{surah: 10, startAyah: 89, endAyah: 106}])] },{ day: 23, sessions: [createSession("221-222", [{surah: 10, startAyah: 107, endAyah: 109}, {surah: 11, startAyah: 1, endAyah: 12}]), createSession("223-224", [{surah: 11, startAyah: 13, endAyah: 28}]), createSession("225-226", [{surah: 11, startAyah: 29, endAyah: 45}]), createSession("227-228", [{surah: 11, startAyah: 46, endAyah: 62}]), createSession("229-230", [{surah: 11, startAyah: 63, endAyah: 81}])] },{ day: 24, sessions: [createSession("231-232", [{surah: 11, startAyah: 82, endAyah: 97}]), createSession("233-234", [{surah: 11, startAyah: 98, endAyah: 117}]), createSession("235-236", [{surah: 11, startAyah: 118, endAyah: 123}, {surah: 12, startAyah: 1, endAyah: 14}]), createSession("237-238", [{surah: 12, startAyah: 15, endAyah: 30}]), createSession("239-240", [{surah: 12, startAyah: 31, endAyah: 43}])] },{ day: 25, sessions: [createSession("241-242", [{surah: 12, startAyah: 44, endAyah: 63}]), createSession("243-244", [{surah: 12, startAyah: 64, endAyah: 78}]), createSession("245-246", [{surah: 12, startAyah: 79, endAyah: 95}]), createSession("247-248", [{surah: 12, startAyah: 96, endAyah: 111}]), createSession("249-250", [{surah: 13, startAyah: 1, endAyah: 13}])] },{ day: 26, sessions: [createSession("251-252", [{surah: 13, startAyah: 14, endAyah: 28}]), createSession("253-254", [{surah: 13, startAyah: 29, endAyah: 43}]), createSession("255-256", [{surah: 14, startAyah: 1, endAyah: 10}]), createSession("257-258", [{surah: 14, startAyah: 11, endAyah: 24}]), createSession("259-260", [{surah: 14, startAyah: 25, endAyah: 42}])] },{ day: 27, sessions: [createSession("261-262", [{surah: 14, startAyah: 43, endAyah: 52}, {surah: 15, startAyah: 1, endAyah: 15}]), createSession("263-264", [{surah: 15, startAyah: 16, endAyah: 51}]), createSession("265-266", [{surah: 15, startAyah: 52, endAyah: 90}]), createSession("267-268", [{surah: 15, startAyah: 91, endAyah: 99}, {surah: 16, startAyah: 1, endAyah: 14}]), createSession("269-270", [{surah: 16, startAyah: 15, endAyah: 34}])] },{ day: 28, sessions: [createSession("271-272", [{surah: 16, startAyah: 35, endAyah: 54}]), createSession("273-274", [{surah: 16, startAyah: 55, endAyah: 72}]), createSession("275-276", [{surah: 16, startAyah: 73, endAyah: 87}]), createSession("277-278", [{surah: 16, startAyah: 88, endAyah: 102}]), createSession("279-280", [{surah: 16, startAyah: 103, endAyah: 118}])] },{ day: 29, sessions: [createSession("281-282", [{surah: 16, startAyah: 119, endAyah: 128}, {surah: 17, startAyah: 1, endAyah: 7}]), createSession("283-284", [{surah: 17, startAyah: 8, endAyah: 27}]), createSession("285-286", [{surah: 17, startAyah: 28, endAyah: 49}]), createSession("287-288", [{surah: 17, startAyah: 50, endAyah: 66}]), createSession("289-290", [{surah: 17, startAyah: 67, endAyah: 86}])] },{ day: 30, sessions: [createSession("291-292", [{surah: 17, startAyah: 87, endAyah: 104}]), createSession("293-294", [{surah: 17, startAyah: 105, endAyah: 111}, {surah: 18, startAyah: 1, endAyah: 15}]), createSession("295-296", [{surah: 18, startAyah: 16, endAyah: 27}]), createSession("297-298", [{surah: 18, startAyah: 28, endAyah: 45}]), createSession("299-300", [{surah: 18, startAyah: 46, endAyah: 61}])] },{ day: 31, sessions: [createSession("301-302", [{surah: 18, startAyah: 62, endAyah: 83}]), createSession("303-304", [{surah: 18, startAyah: 84, endAyah: 110}]), createSession("305-306", [{surah: 19, startAyah: 1, endAyah: 25}]), createSession("307-308", [{surah: 19, startAyah: 26, endAyah: 51}]), createSession("309-310", [{surah: 19, startAyah: 52, endAyah: 76}])] },{ day: 32, sessions: [createSession("311-312", [{surah: 19, startAyah: 77, endAyah: 98}, {surah: 20, startAyah: 1, endAyah: 12}]), createSession("313-314", [{surah: 20, startAyah: 13, endAyah: 51}]), createSession("315-316", [{surah: 20, startAyah: 52, endAyah: 76}]), createSession("317-318", [{surah: 20, startAyah: 77, endAyah: 98}]), createSession("319-320", [{surah: 20, startAyah: 99, endAyah: 125}])] },{ day: 33, sessions: [createSession("321-322", [{surah: 20, startAyah: 126, endAyah: 135}, {surah: 21, startAyah: 1, endAyah: 10}]), createSession("323-324", [{surah: 21, startAyah: 11, endAyah: 35}]), createSession("325-326", [{surah: 21, startAyah: 36, endAyah: 57}]), createSession("327-328", [{surah: 21, startAyah: 58, endAyah: 81}]), createSession("329-330", [{surah: 21, startAyah: 82, endAyah: 101}])] },{ day: 34, sessions: [createSession("331-332", [{surah: 21, startAyah: 102, endAyah: 112}, {surah: 22, startAyah: 1, endAyah: 5}]), createSession("333-334", [{surah: 22, startAyah: 6, endAyah: 23}]), createSession("335-336", [{surah: 22, startAyah: 24, endAyah: 38}]), createSession("337-338", [{surah: 22, startAyah: 39, endAyah: 55}]), createSession("339-340", [{surah: 22, startAyah: 56, endAyah: 72}])] },{ day: 35, sessions: [createSession("341-342", [{surah: 22, startAyah: 73, endAyah: 78}, {surah: 23, startAyah: 1, endAyah: 17}]), createSession("343-344", [{surah: 23, startAyah: 18, endAyah: 42}]), createSession("345-346", [{surah: 23, startAyah: 43, endAyah: 74}]), createSession("347-348", [{surah: 23, startAyah: 75, endAyah: 104}]), createSession("349-350", [{surah: 23, startAyah: 105, endAyah: 118}, {surah: 24, startAyah: 1, endAyah: 10}])] },{ day: 36, sessions: [createSession("351-352", [{surah: 24, startAyah: 11, endAyah: 27}]), createSession("353-354", [{surah: 24, startAyah: 28, endAyah: 37}]), createSession("355-356", [{surah: 24, startAyah: 38, endAyah: 53}]), createSession("357-358", [{surah: 24, startAyah: 54, endAyah: 61}]), createSession("359-360", [{surah: 24, startAyah: 62, endAyah: 64}, {surah: 25, startAyah: 1, endAyah: 11}])] },{ day: 37, sessions: [createSession("361-362", [{surah: 25, startAyah: 12, endAyah: 32}]), createSession("363-364", [{surah: 25, startAyah: 33, endAyah: 55}]), createSession("365-366", [{surah: 25, startAyah: 56, endAyah: 77}]), createSession("367-368", [{surah: 26, startAyah: 1, endAyah: 39}]), createSession("369-370", [{surah: 26, startAyah: 40, endAyah: 83}])] },{ day: 38, sessions: [createSession("371-372", [{surah: 26, startAyah: 84, endAyah: 136}]), createSession("373-374", [{surah: 26, startAyah: 137, endAyah: 183}]), createSession("375-376", [{surah: 26, startAyah: 184, endAyah: 227}]), createSession("377-378", [{surah: 27, startAyah: 1, endAyah: 22}]), createSession("379-380", [{surah: 27, startAyah: 23, endAyah: 44}])] },{ day: 39, sessions: [createSession("381-382", [{surah: 27, startAyah: 45, endAyah: 63}]), createSession("383-384", [{surah: 27, startAyah: 64, endAyah: 88}]), createSession("385-386", [{surah: 27, startAyah: 89, endAyah: 93}, {surah: 28, startAyah: 1, endAyah: 13}]), createSession("387-388", [{surah: 28, startAyah: 14, endAyah: 28}]), createSession("389-390", [{surah: 28, startAyah: 29, endAyah: 43}])] },{ day: 40, sessions: [createSession("391-392", [{surah: 28, startAyah: 44, endAyah: 59}]), createSession("393-394", [{surah: 28, startAyah: 60, endAyah: 77}]), createSession("395-396", [{surah: 28, startAyah: 78, endAyah: 88}, {surah: 29, startAyah: 1, endAyah: 6}]), createSession("397-398", [{surah: 29, startAyah: 7, endAyah: 23}]), createSession("399-400", [{surah: 29, startAyah: 24, endAyah: 38}])] },{ day: 41, sessions: [createSession("401-402", [{surah: 29, startAyah: 39, endAyah: 52}]), createSession("403-404", [{surah: 29, startAyah: 53, endAyah: 69}, {surah: 30, startAyah: 1, endAyah: 5}]), createSession("405-406", [{surah: 30, startAyah: 6, endAyah: 24}]), createSession("407-408", [{surah: 30, startAyah: 25, endAyah: 41}]), createSession("409-410", [{surah: 30, startAyah: 42, endAyah: 60}])] },{ day: 42, sessions: [createSession("411-412", [{surah: 31, startAyah: 1, endAyah: 19}]), createSession("413-414", [{surah: 31, startAyah: 20, endAyah: 34}]), createSession("415-416", [{surah: 32, startAyah: 1, endAyah: 20}]), createSession("417-418", [{surah: 32, startAyah: 21, endAyah: 30}, {surah: 33, startAyah: 1, endAyah: 6}]), createSession("419-420", [{surah: 33, startAyah: 7, endAyah: 22}])] },{ day: 43, sessions: [createSession("421-422", [{surah: 33, startAyah: 23, endAyah: 35}]), createSession("423-424", [{surah: 33, startAyah: 36, endAyah: 50}]), createSession("425-426", [{surah: 33, startAyah: 51, endAyah: 62}]), createSession("427-428", [{surah: 33, startAyah: 63, endAyah: 73}, {surah: 34, startAyah: 1, endAyah: 7}]), createSession("429-430", [{surah: 34, startAyah: 8, endAyah: 22}])] },{ day: 44, sessions: [createSession("431-432", [{surah: 34, startAyah: 23, endAyah: 39}]), createSession("433-434", [{surah: 34, startAyah: 40, endAyah: 54}, {surah: 35, startAyah: 1, endAyah: 3}]), createSession("435-436", [{surah: 35, startAyah: 4, endAyah: 18}]), createSession("437-438", [{surah: 35, startAyah: 19, endAyah: 38}]), createSession("439-440", [{surah: 35, startAyah: 39, endAyah: 45}, {surah: 36, startAyah: 1, endAyah: 12}])] },{ day: 45, sessions: [createSession("441-442", [{surah: 36, startAyah: 13, endAyah: 40}]), createSession("443-444", [{surah: 36, startAyah: 41, endAyah: 70}]), createSession("445-446", [{surah: 36, startAyah: 71, endAyah: 83}, {surah: 37, startAyah: 1, endAyah: 24}]), createSession("447-448", [{surah: 37, startAyah: 25, endAyah: 76}]), createSession("449-450", [{surah: 37, startAyah: 77, endAyah: 126}])] },{ day: 46, sessions: [createSession("451-452", [{surah: 37, startAyah: 127, endAyah: 182}]), createSession("453-454", [{surah: 38, startAyah: 1, endAyah: 26}]), createSession("455-456", [{surah: 38, startAyah: 27, endAyah: 61}]), createSession("457-458", [{surah: 38, startAyah: 62, endAyah: 88}, {surah: 39, startAyah: 1, endAyah: 5}]), createSession("459-460", [{surah: 39, startAyah: 6, endAyah: 21}])] },{ day: 47, sessions: [createSession("461-462", [{surah: 39, startAyah: 22, endAyah: 40}]), createSession("463-464", [{surah: 39, startAyah: 41, endAyah: 56}]), createSession("465-466", [{surah: 39, startAyah: 57, endAyah: 75}]), createSession("467-468", [{surah: 40, startAyah: 1, endAyah: 16}]), createSession("469-470", [{surah: 40, startAyah: 17, endAyah: 33}])] },{ day: 48, sessions: [createSession("471-472", [{surah: 40, startAyah: 34, endAyah: 49}]), createSession("473-474", [{surah: 40, startAyah: 50, endAyah: 66}]), createSession("475-476", [{surah: 40, startAyah: 67, endAyah: 85}]), createSession("477-478", [{surah: 41, startAyah: 1, endAyah: 20}]), createSession("479-480", [{surah: 41, startAyah: 21, endAyah: 38}])] },{ day: 49, sessions: [createSession("481-482", [{surah: 41, startAyah: 39, endAyah: 54}]), createSession("483-484", [{surah: 42, startAyah: 1, endAyah: 15}]), createSession("485-486", [{surah: 42, startAyah: 16, endAyah: 31}]), createSession("487-488", [{surah: 42, startAyah: 32, endAyah: 51}]), createSession("489-490", [{surah: 42, startAyah: 52, endAyah: 53}, {surah: 43, startAyah: 1, endAyah: 22}])] },{ day: 50, sessions: [createSession("491-492", [{surah: 43, startAyah: 23, endAyah: 47}]), createSession("493-494", [{surah: 43, startAyah: 48, endAyah: 73}]), createSession("495-496", [{surah: 43, startAyah: 74, endAyah: 89}, {surah: 44, startAyah: 1, endAyah: 18}]), createSession("497-498", [{surah: 44, startAyah: 19, endAyah: 59}]), createSession("499-500", [{surah: 45, startAyah: 1, endAyah: 22}])] },{ day: 51, sessions: [createSession("501-502", [{surah: 45, startAyah: 23, endAyah: 37}, {surah: 46, startAyah: 1, endAyah: 5}]), createSession("503-504", [{surah: 46, startAyah: 6, endAyah: 20}]), createSession("505-506", [{surah: 46, startAyah: 21, endAyah: 35}]), createSession("507-508", [{surah: 47, startAyah: 1, endAyah: 19}]), createSession("509-510", [{surah: 47, startAyah: 20, endAyah: 38}])] },{ day: 52, sessions: [createSession("511-512", [{surah: 48, startAyah: 1, endAyah: 15}]), createSession("513-514", [{surah: 48, startAyah: 16, endAyah: 28}]), createSession("515-516", [{surah: 48, startAyah: 29, endAyah: 29}, {surah: 49, startAyah: 1, endAyah: 11}]), createSession("517-518", [{surah: 49, startAyah: 12, endAyah: 18}, {surah: 50, startAyah: 1, endAyah: 15}]), createSession("519-520", [{surah: 50, startAyah: 16, endAyah: 45}])] },{ day: 53, sessions: [createSession("521-522", [{surah: 51, startAyah: 1, endAyah: 51}]), createSession("523-524", [{surah: 51, startAyah: 52, endAyah: 60}, {surah: 52, startAyah: 1, endAyah: 31}]), createSession("525-526", [{surah: 52, startAyah: 32, endAyah: 49}, {surah: 53, startAyah: 1, endAyah: 26}]), createSession("527-528", [{surah: 53, startAyah: 27, endAyah: 62}, {surah: 54, startAyah: 1, endAyah: 6}]), createSession("529-530", [{surah: 54, startAyah: 7, endAyah: 49}])] },{ day: 54, sessions: [createSession("531-532", [{surah: 54, startAyah: 50, endAyah: 55}, {surah: 55, startAyah: 1, endAyah: 40}]), createSession("533-534", [{surah: 55, startAyah: 41, endAyah: 78}]), createSession("535-536", [{surah: 56, startAyah: 1, endAyah: 76}]), createSession("537-538", [{surah: 56, startAyah: 77, endAyah: 96}, {surah: 57, startAyah: 1, endAyah: 11}]), createSession("539-540", [{surah: 57, startAyah: 12, endAyah: 24}])] },{ day: 55, sessions: [createSession("541-542", [{surah: 57, startAyah: 25, endAyah: 29}, {surah: 58, startAyah: 1, endAyah: 6}]), createSession("543-544", [{surah: 58, startAyah: 7, endAyah: 21}]), createSession("545-546", [{surah: 58, startAyah: 22, endAyah: 22}, {surah: 59, startAyah: 1, endAyah: 9}]), createSession("547-548", [{surah: 59, startAyah: 10, endAyah: 24}]), createSession("549-550", [{surah: 60, startAyah: 1, endAyah: 11}])] },{ day: 56, sessions: [createSession("551-552", [{surah: 60, startAyah: 12, endAyah: 13}, {surah: 61, startAyah: 1, endAyah: 14}]), createSession("553-554", [{surah: 62, startAyah: 1, endAyah: 11}]), createSession("555-556", [{surah: 63, startAyah: 1, endAyah: 11}, {surah: 64, startAyah: 1, endAyah: 9}]), createSession("557-558", [{surah: 64, startAyah: 10, endAyah: 18}, {surah: 65, startAyah: 1, endAyah: 5}]), createSession("559-560", [{surah: 65, startAyah: 6, endAyah: 12}, {surah: 66, startAyah: 1, endAyah: 7}])] },{ day: 57, sessions: [createSession("561-562", [{surah: 66, startAyah: 8, endAyah: 12}, {surah: 67, startAyah: 1, endAyah: 12}]), createSession("563-564", [{surah: 67, startAyah: 13, endAyah: 30}, {surah: 68, startAyah: 1, endAyah: 15}]), createSession("565-566", [{surah: 68, startAyah: 16, endAyah: 52}, {surah: 69, startAyah: 1, endAyah: 8}]), createSession("567-568", [{surah: 69, startAyah: 9, endAyah: 52}, {surah: 70, startAyah: 1, endAyah: 10}]), createSession("569-570", [{surah: 70, startAyah: 11, endAyah: 44}, {surah: 71, startAyah: 1, endAyah: 10}])] },{ day: 58, sessions: [createSession("571-572", [{surah: 71, startAyah: 11, endAyah: 28}, {surah: 72, startAyah: 1, endAyah: 13}]), createSession("573-574", [{surah: 72, startAyah: 14, endAyah: 28}, {surah: 73, startAyah: 1, endAyah: 19}]), createSession("575-576", [{surah: 73, startAyah: 20, endAyah: 20}, {surah: 74, startAyah: 1, endAyah: 47}]), createSession("577-578", [{surah: 74, startAyah: 48, endAyah: 56}, {surah: 75, startAyah: 1, endAyah: 40}, {surah: 76, startAyah: 1, endAyah: 5}]), createSession("579-580", [{surah: 76, startAyah: 6, endAyah: 31}, {surah: 77, startAyah: 1, endAyah: 19}])] },{ day: 59, sessions: [createSession("581-582", [{surah: 77, startAyah: 20, endAyah: 50}, {surah: 78, startAyah: 1, endAyah: 30}]), createSession("583-584", [{surah: 78, startAyah: 31, endAyah: 40}, {surah: 79, startAyah: 1, endAyah: 46}]), createSession("585-586", [{surah: 80, startAyah: 1, endAyah: 42}, {surah: 81, startAyah: 1, endAyah: 29}]), createSession("587-588", [{surah: 82, startAyah: 1, endAyah: 19}, {surah: 83, startAyah: 1, endAyah: 36}]), createSession("589-590", [{surah: 84, startAyah: 1, endAyah: 25}, {surah: 85, startAyah: 1, endAyah: 22}])] },{ day: 60, sessions: [createSession("591-592", [{surah: 86, startAyah: 1, endAyah: 17}, {surah: 87, startAyah: 1, endAyah: 19}, {surah: 88, startAyah: 1, endAyah: 26}]), createSession("593-594", [{surah: 89, startAyah: 1, endAyah: 30}, {surah: 90, startAyah: 1, endAyah: 20}]), createSession("595-596", [{surah: 91, startAyah: 1, endAyah: 15}, {surah: 92, startAyah: 1, endAyah: 21}, {surah: 93, startAyah: 1, endAyah: 11}, {surah: 94, startAyah: 1, endAyah: 8}]), createSession("597-598", [{surah: 95, startAyah: 1, endAyah: 8}, {surah: 96, startAyah: 1, endAyah: 19}, {surah: 97, startAyah: 1, endAyah: 5}, {surah: 98, startAyah: 1, endAyah: 8}]), createSession("599-604", [{surah: 99, startAyah: 1, endAyah: 8}, {surah: 100, startAyah: 1, endAyah: 11}, {surah: 101, startAyah: 1, endAyah: 11}, {surah: 102, startAyah: 1, endAyah: 8}, {surah: 103, startAyah: 1, endAyah: 3}, {surah: 104, startAyah: 1, endAyah: 9}, {surah: 105, startAyah: 1, endAyah: 5}, {surah: 106, startAyah: 1, endAyah: 4}, {surah: 107, startAyah: 1, endAyah: 7}, {surah: 108, startAyah: 1, endAyah: 3}, {surah: 109, startAyah: 1, endAyah: 6}, {surah: 110, startAyah: 1, endAyah: 3}, {surah: 111, startAyah: 1, endAyah: 5}, {surah: 112, startAyah: 1, endAyah: 4}, {surah: 113, startAyah: 1, endAyah: 5}, {surah: 114, startAyah: 1, endAyah: 6}])] }];
+      
+        function generate30DaySchedule() { 
+            const schedule30 = []; 
+            for (let i = 0; i < 30; i++) { 
+                const day1 = completeQuranSchedule[i * 2]; 
+                const day2 = completeQuranSchedule[i * 2 + 1]; 
+                if (day1 && day2) { 
+                    const combinedSessions = [...day1.sessions, ...day2.sessions]; 
+                    schedule30.push({ day: i + 1, sessions: combinedSessions }); 
+                } else if (day1) { 
+                    schedule30.push({ day: i + 1, sessions: day1.sessions }); 
+                } 
+            } 
+            return schedule30; 
+        }
+        
+        function generate300DaySchedule() { 
+            const schedule300 = []; 
+            const allSessions = []; 
+            completeQuranSchedule.forEach(day => { 
+                day.sessions.forEach(session => { allSessions.push(session); }); 
+            }); 
+            for (let i = 0; i < 300; i++) { 
+                if (i < allSessions.length) { 
+                    schedule300.push({ day: i + 1, sessions: [allSessions[i]] }); 
+                } 
+            } 
+            return schedule300; 
+        }
+        
+        function getScheduleForDuration(duration) { 
+            if (duration === 30) return generate30DaySchedule(); 
+            else if (duration === 300) return generate300DaySchedule(); 
+            else return completeQuranSchedule; 
+        }
+
+        // Font size and mode state
+        let currentFontSizeIndex = 0; // 0 = normal, 1 = large, 2 = xlarge
+        let currentMode = 'list'; // 'list' or 'mushaf'
+        const FONT_SIZE_CLASSES = ['font-normal', 'font-large', 'font-xlarge'];
+        
+        // LEVEL SYSTEM CONFIGURATION
+        const LEVEL_CONFIG = {
+            EXP_PER_SESSION: 10,
+            TIERS: [
+                { maxLevel: 20, expPerLevel: 100 },
+                { maxLevel: 50, expPerLevel: 150 },
+                { maxLevel: 100, expPerLevel: 200 },
+                { maxLevel: 200, expPerLevel: 300 },
+                { maxLevel: 500, expPerLevel: 500 },
+                { maxLevel: 1000, expPerLevel: 800 },
+                { maxLevel: 5000, expPerLevel: 1200 },
+                { maxLevel: 10000, expPerLevel: 2000 },
+                { maxLevel: Infinity, expPerLevel: 5000 }
+            ]
+        };
+
+        // BADGE DEFINITIONS
+        const BADGES = [
+            { id: 'genesis', name: 'Genesis', level: 10, icon: '🌱', class: 'genesis', desc: 'Awal Perjalanan' },
+            { id: 'seeker', name: 'Seeker', level: 25, icon: '🔎', class: 'seeker', desc: 'Pencari Ilmu' },
+            { id: 'wanderer', name: 'Wanderer', level: 50, icon: '🧭', class: 'wanderer', desc: 'Pengembara Cahaya' },
+            { id: 'reflector', name: 'Reflector', level: 75, icon: '🧬', class: 'reflector', desc: 'Pemantun Hikmah' },
+            { id: 'luminary', name: 'Luminary', level: 100, icon: '✨', class: 'luminary', desc: 'Sumber Cahaya' },
+            { id: 'keeper', name: 'Keeper', level: 150, icon: '🌙', class: 'keeper', desc: 'Penjaga Cahaya' },
+            { id: 'master', name: 'Master', level: 200, icon: '🔮', class: 'master', desc: 'Master Qur\'an' },
+            { id: 'ascendant', name: 'Ascendant', level: 500, icon: '💎', class: 'ascendant', desc: 'Yang Naik Derajat' },
+            { id: 'guardian', name: 'Guardian', level: 1000, icon: '🛡️', class: 'guardian', desc: 'Pelindung Qur\'an' },
+            { id: 'illuminator', name: 'Illuminator', level: 5000, icon: '🧩', class: 'illuminator', desc: 'Penerang Jiwa' },
+            { id: 'legacy', name: 'Legacy', level: 10000, icon: '🪩', class: 'legacy', desc: 'Warisan Abadi' },
+            { id: 'endless', name: 'Endless', level: Infinity, icon: '♾️', class: 'endless', desc: 'Tanpa Batas' }
+        ];
+
+        // LEVEL TITLES
+        const LEVEL_TITLES = [
+            { maxLevel: 5, title: 'Pembaca Baru' },
+            { maxLevel: 10, title: 'Genesis' },
+            { maxLevel: 25, title: 'Seeker' },
+            { maxLevel: 50, title: 'Wanderer' },
+            { maxLevel: 75, title: 'Reflector' },
+            { maxLevel: 100, title: 'Luminary' },
+            { maxLevel: 150, title: 'Keeper' },
+            { maxLevel: 200, title: 'Master' },
+            { maxLevel: 500, title: 'Ascendant' },
+            { maxLevel: 1000, title: 'Guardian' },
+            { maxLevel: 5000, title: 'Illuminator' },
+            { maxLevel: 10000, title: 'Legacy' },
+            { maxLevel: Infinity, title: 'Endless' }
+        ];
+
+        let quranData = [];
+        let appData = { startDate: null, duration: 60, schedule: [], progress: {}, level: 1, exp: 0, unlockedBadges: [], sessionExpClaimed: {} };
+        let selectedDay = null, hasShownSuccess = false, currentSession = null, currentDayIndex = null, currentSessionIndex = null, currentDateKey = null;
+        let lastShownLevel = 1;
+        let lastUnlockedBadges = [];
+
+        const setupScreen = document.getElementById('setupScreen'), mainApp = document.getElementById('mainApp'), startDateInput = document.getElementById('startDateInput'), startBtn = document.getElementById('startBtn'), calendarScroll = document.getElementById('calendarScroll'), emptyState = document.getElementById('emptyState'), sessionContent = document.getElementById('sessionContent'), sessionList = document.getElementById('sessionList'), successModal = document.getElementById('successModal'), closeModalBtn = document.getElementById('closeModalBtn'), readerOverlay = document.getElementById('readerOverlay'), readerContent = document.getElementById('readerContent'), readerClose = document.getElementById('readerClose'), btnCompleteReading = document.getElementById('btnCompleteReading'), surahListBtn = document.getElementById('surahListBtn'), surahSheetOverlay = document.getElementById('surahSheetOverlay'), surahSheetClose = document.getElementById('surahSheetClose'), surahListGrid = document.getElementById('surahListGrid'), fabMain = document.getElementById('fabMain'), resetModal = document.getElementById('resetModal'), targetModal = document.getElementById('targetModal'), continueBtn = document.getElementById('continueBtn'), changeTargetBtn = document.getElementById('changeTargetBtn'), cancelResetBtn = document.getElementById('cancelResetBtn'), cancelTargetBtn = document.getElementById('cancelTargetBtn'), fontSizeBtn = document.getElementById('fontSizeBtn'), modeSwitchBtn = document.getElementById('modeSwitchBtn');
+
+        document.addEventListener('DOMContentLoaded', async () => { 
+            setupDateInput(); 
+            setupEventListeners(); 
+            setupSwipeGestures(); 
+            setupSurahList(); 
+            await loadQuranData(); 
+            loadData(); 
+        });
+
+        function setupDateInput() { 
+            const today = new Date().toISOString().split('T')[0]; 
+            startDateInput.value = today; 
+            startBtn.disabled = false; 
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('.quick-day-btn').forEach(btn => { 
+                btn.addEventListener('click', () => { 
+                    document.querySelectorAll('.quick-day-btn').forEach(b => b.classList.remove('selected')); 
+                    btn.classList.add('selected'); 
+                    appData.duration = parseInt(btn.dataset.days); 
+                }); 
+            });
+            
+            startBtn.addEventListener('click', () => { 
+                const startDate = new Date(startDateInput.value); 
+                const selectedBtn = document.querySelector('.quick-day-btn.selected'); 
+                const duration = selectedBtn ? parseInt(selectedBtn.dataset.days) : 60; 
+                initializeApp(startDate, duration); 
+            });
+            
+            startDateInput.addEventListener('change', () => { 
+                startBtn.disabled = !startDateInput.value; 
+            });
+            
+            document.getElementById('scrollLeft').addEventListener('click', () => { 
+                calendarScroll.scrollBy({ left: -200, behavior: 'smooth' }); 
+            });
+            
+            document.getElementById('scrollRight').addEventListener('click', () => { 
+                calendarScroll.scrollBy({ left: 200, behavior: 'smooth' }); 
+            });
+            
+            document.getElementById('resetBtn').addEventListener('click', () => { 
+                fabMain.classList.remove('active'); 
+                resetModal.classList.add('active'); 
+            });
+            
+            continueBtn.addEventListener('click', () => { 
+                resetWithSameTarget(); 
+                resetModal.classList.remove('active'); 
+            });
+            
+            changeTargetBtn.addEventListener('click', () => { 
+                resetModal.classList.remove('active'); 
+                targetModal.classList.add('active'); 
+            });
+            
+            cancelResetBtn.addEventListener('click', () => { 
+                resetModal.classList.remove('active'); 
+            });
+            
+            cancelTargetBtn.addEventListener('click', () => { 
+                targetModal.classList.remove('active'); 
+            });
+            
+            document.querySelectorAll('.target-option-btn').forEach(btn => { 
+                btn.addEventListener('click', () => { 
+                    const newDuration = parseInt(btn.dataset.days); 
+                    resetWithNewTarget(newDuration); 
+                    targetModal.classList.remove('active'); 
+                }); 
+            });
+            
+            closeModalBtn.addEventListener('click', () => { 
+                successModal.classList.remove('active'); 
+            });
+            
+            document.getElementById('closeDailyModalBtn').addEventListener('click', () => { 
+                document.getElementById('dailyModal').classList.remove('active'); 
+            });
+            
+            readerClose.addEventListener('click', closeReader);
+            
+            btnCompleteReading.addEventListener('click', () => { 
+                if (currentDateKey && currentSessionIndex !== null) 
+                    completeSessionAndExit(currentDateKey, currentSessionIndex); 
+            });
+            
+            surahListBtn.addEventListener('click', openSurahSheet);
+            surahSheetClose.addEventListener('click', closeSurahSheet);
+            surahSheetOverlay.addEventListener('click', (e) => { 
+                if (e.target === surahSheetOverlay) closeSurahSheet(); 
+            });
+            
+            fabMain.addEventListener('click', () => { 
+                fabMain.classList.toggle('active'); 
+            });
+            
+            document.addEventListener('click', (e) => { 
+                if (!e.target.closest('.fab-container')) fabMain.classList.remove('active'); 
+            });
+            
+            document.getElementById('levelBadge').addEventListener('click', showLevelDetailModal);
+            document.getElementById('closeLevelDetailBtn').addEventListener('click', () => { 
+                document.getElementById('levelDetailModal').classList.remove('active'); 
+            });
+            document.getElementById('closeLevelupBtn').addEventListener('click', () => { 
+                document.getElementById('levelupModal').classList.remove('active'); 
+            });
+            document.getElementById('closeBadgeBtn').addEventListener('click', () => { 
+                document.getElementById('badgeModal').classList.remove('active'); 
+            });
+            
+            // Font size toggle button
+            fontSizeBtn.addEventListener('click', toggleFontSize);
+            
+            // Mode switch button
+            modeSwitchBtn.addEventListener('click', toggleMode);
+        }
+        
+        // Font size toggle function
+        function toggleFontSize() {
+            currentFontSizeIndex = (currentFontSizeIndex + 1) % 3;
+            updateFontSize();
+        }
+        
+        function updateFontSize() {
+            // Remove all font size classes
+            FONT_SIZE_CLASSES.forEach(cls => readerContent.classList.remove(cls));
+            // Add current font size class
+            readerContent.classList.add(FONT_SIZE_CLASSES[currentFontSizeIndex]);
+        }
+        
+        // Mode toggle function
+        function toggleMode() {
+            currentMode = currentMode === 'list' ? 'mushaf' : 'list';
+            updateMode();
+        }
+        
+        function updateMode() {
+            // Remove mode classes
+            readerContent.classList.remove('mode-list', 'mode-mushaf');
+            // Add current mode class
+            readerContent.classList.add(`mode-${currentMode}`);
+            
+            // Update button active state
+            modeSwitchBtn.classList.toggle('active', currentMode === 'mushaf');
+            
+            // Re-render content with new mode if reader is open
+            if (currentSession) {
+                if (currentSessionIndex !== null) {
+                    // Session reading mode
+                    renderReaderContent();
+                } else {
+                    // Surah reading mode
+                    const surahNumber = currentSession.surahRanges[0].surah;
+                    renderSurahContent(surahNumber);
+                }
+            }
+        }
+        
+        // Render reader content based on current mode
+        function renderReaderContent() {
+            if (!currentSession) return;
+            
+            const surahRanges = currentSession.surahRanges;
+            readerContent.innerHTML = '';
+            
+            if (currentMode === 'list') {
+                // List mode - vertical layout
+                surahRanges.forEach((range) => { 
+                    const surah = quranData.find(s => s.number === range.surah); 
+                    if (surah && surah.ayahs.length > 0) { 
+                        const surahSection = document.createElement('div'); 
+                        surahSection.className = 'surah-section'; 
+                        const surahHeader = document.createElement('div'); 
+                        surahHeader.className = 'surah-header'; 
+                        surahHeader.innerHTML = `<div class="surah-name-arabic">${surah.arabicName}</div><div class="surah-name-latin">${surah.name}</div><div class="surah-info">${surah.type} • ${surah.verses} Ayat</div>`; 
+                        surahSection.appendChild(surahHeader);
+                        
+                        for (let i = range.startAyah; i <= range.endAyah && i <= surah.verses; i++) { 
+                            const ayahData = surah.ayahs.find(a => a.number === i); 
+                            if (!ayahData) continue; 
+                            const ayahContainer = document.createElement('div'); 
+                            ayahContainer.className = 'ayah-container'; 
+                            ayahContainer.id = `ayah-${surah.number}-${i}`; 
+                            ayahContainer.innerHTML = `<div class="ayah-header"><div class="ayah-number">${i}</div></div><div class="ayah-arabic">${ayahData.arabic}</div>`; 
+                            surahSection.appendChild(ayahContainer); 
+                        }
+                        readerContent.appendChild(surahSection); 
+                    }
+                });
+            } else {
+                // Mushaf mode - horizontal/inline layout
+                surahRanges.forEach((range) => { 
+                    const surah = quranData.find(s => s.number === range.surah); 
+                    if (surah && surah.ayahs.length > 0) { 
+                        const surahSection = document.createElement('div'); 
+                        surahSection.className = 'surah-section'; 
+                        const surahHeader = document.createElement('div'); 
+                        surahHeader.className = 'surah-header'; 
+                        surahHeader.innerHTML = `<div class="surah-name-arabic">${surah.arabicName}</div><div class="surah-name-latin">${surah.name}</div><div class="surah-info">${surah.type} • ${surah.verses} Ayat</div>`; 
+                        surahSection.appendChild(surahHeader);
+                        
+                        // Add Bismillah except for Surah At-Taubah (9)
+                        if (range.surah !== 9) {
+                            const bismillah = document.createElement('div'); 
+                            bismillah.className = 'bismillah'; 
+                            bismillah.textContent = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ'; 
+                            surahSection.appendChild(bismillah);
+                        }
+                        
+                        const mushafContainer = document.createElement('div'); 
+                        mushafContainer.className = 'mushaf-container'; 
+                        
+                        for (let i = range.startAyah; i <= range.endAyah && i <= surah.verses; i++) { 
+                            const ayahData = surah.ayahs.find(a => a.number === i); 
+                            if (!ayahData) continue; 
+                            
+                            const ayahSpan = document.createElement('span'); 
+                            ayahSpan.className = 'mushaf-ayah'; 
+                            ayahSpan.innerHTML = `<span class="mushaf-ayah-text">${ayahData.arabic}</span><span class="mushaf-ayah-number">${i}</span>`; 
+                            mushafContainer.appendChild(ayahSpan); 
+                        }
+                        surahSection.appendChild(mushafContainer); 
+                        readerContent.appendChild(surahSection); 
+                    }
+                });
+            }
+            
+            setTimeout(() => { 
+                readerContent.scrollTop = 0; 
+            }, 10);
+        }
+        
+        // Render surah content based on current mode
+        function renderSurahContent(surahNumber) {
+            const surah = quranData.find(s => s.number === surahNumber);
+            if (!surah || surah.ayahs.length === 0) return;
+            
+            readerContent.innerHTML = '';
+            
+            const surahHeader = document.createElement('div'); 
+            surahHeader.className = 'surah-header'; 
+            surahHeader.innerHTML = `<div class="surah-name-arabic">${surah.arabicName}</div><div class="surah-name-latin">${surah.name}</div><div class="surah-info">${surah.type} • ${surah.verses} Ayat</div>`; 
+            readerContent.appendChild(surahHeader);
+            
+            if (currentMode === 'list') {
+                // List mode
+                if (surahNumber !== 9) { 
+                    const bismillah = document.createElement('div'); 
+                    bismillah.className = 'bismillah'; 
+                    bismillah.textContent = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ'; 
+                    readerContent.appendChild(bismillah); 
+                }
+                
+                surah.ayahs.forEach(ayah => { 
+                    const ayahContainer = document.createElement('div'); 
+                    ayahContainer.className = 'ayah-container'; 
+                    ayahContainer.innerHTML = `<div class="ayah-header"><div class="ayah-number">${ayah.number}</div></div><div class="ayah-arabic">${ayah.arabic}</div>`; 
+                    readerContent.appendChild(ayahContainer); 
+                });
+            } else {
+                // Mushaf mode
+                if (surahNumber !== 9) { 
+                    const bismillah = document.createElement('div'); 
+                    bismillah.className = 'bismillah'; 
+                    bismillah.textContent = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ'; 
+                    readerContent.appendChild(bismillah); 
+                }
+                
+                const mushafContainer = document.createElement('div'); 
+                mushafContainer.className = 'mushaf-container'; 
+                
+                surah.ayahs.forEach(ayah => { 
+                    const ayahSpan = document.createElement('span'); 
+                    ayahSpan.className = 'mushaf-ayah'; 
+                    ayahSpan.innerHTML = `<span class="mushaf-ayah-text">${ayah.arabic}</span><span class="mushaf-ayah-number">${ayah.number}</span>`; 
+                    mushafContainer.appendChild(ayahSpan); 
+                });
+                readerContent.appendChild(mushafContainer); 
+            }
+            
+            setTimeout(() => { 
+                readerContent.scrollTop = 0; 
+            }, 10);
+        }
+
+        // LEVEL SYSTEM FUNCTIONS
+        function getExpForLevel(level) {
+            for (const tier of LEVEL_CONFIG.TIERS) {
+                if (level <= tier.maxLevel) {
+                    return tier.expPerLevel;
+                }
+            }
+            return 5000;
+        }
+
+        function calculateLevel(exp) {
+            let remainingExp = exp;
+            let level = 1;
+            
+            while (remainingExp >= getExpForLevel(level)) {
+                remainingExp -= getExpForLevel(level);
+                level++;
+            }
+            
+            return { level, currentExp: remainingExp, expForNextLevel: getExpForLevel(level) };
+        }
+
+        function getLevelTitle(level) {
+            for (const tier of LEVEL_TITLES) {
+                if (level <= tier.maxLevel) {
+                    return tier.title;
+                }
+            }
+            return 'Endless';
+        }
+
+        function getCurrentBadge(level) {
+            const unlockedBadges = BADGES.filter(badge => level >= badge.level);
+            if (unlockedBadges.length === 0) {
+                return { icon: '🌱', name: 'Pemula' };
+            }
+            return unlockedBadges[unlockedBadges.length - 1];
+        }
+
+        function getUnlockedBadges(level) {
+            return BADGES.filter(badge => level >= badge.level).map(b => b.id);
+        }
+
+        function checkNewBadges(level) {
+            const currentBadges = getUnlockedBadges(level);
+            const newBadges = currentBadges.filter(id => !lastUnlockedBadges.includes(id));
+            return newBadges;
+        }
+
+        function addExp(amount) {
+            const oldLevelData = calculateLevel(appData.exp);
+            appData.exp += amount;
+            const newLevelData = calculateLevel(appData.exp);
+            
+            appData.level = newLevelData.level;
+            
+            if (newLevelData.level > oldLevelData.level) {
+                setTimeout(() => {
+                    showLevelUpModal(newLevelData.level);
+                }, 500);
+            }
+            
+            const newBadges = checkNewBadges(newLevelData.level);
+            if (newBadges.length > 0) {
+                const badge = BADGES.find(b => b.id === newBadges[0]);
+                setTimeout(() => {
+                    showBadgeModal(badge);
+                }, newLevelData.level > oldLevelData.level ? 1500 : 500);
+                lastUnlockedBadges = getUnlockedBadges(newLevelData.level);
+            }
+            
+            appData.unlockedBadges = getUnlockedBadges(newLevelData.level);
+            updateLevelDisplay();
+            saveData();
+        }
+
+        function updateLevelDisplay() {
+            const levelData = calculateLevel(appData.exp);
+            document.getElementById('levelNumber').textContent = levelData.level;
+            
+            const expPercent = (levelData.currentExp / levelData.expForNextLevel) * 100;
+            document.getElementById('levelProgressFill').style.width = `${expPercent}%`;
+            
+            const currentBadge = getCurrentBadge(levelData.level);
+            document.getElementById('currentBadgeIcon').textContent = currentBadge.icon;
+        }
+
+        function showLevelUpModal(level) {
+            const badge = getCurrentBadge(level);
+            setTimeout(() => {
+                document.getElementById('levelupBadgeIcon').textContent = badge.icon;
+                document.getElementById('levelupNewTitle').textContent = `Level ${level} - ${getLevelTitle(level)}`;
+                document.getElementById('levelupModal').classList.add('active');
+                
+                const levelUpSound = document.getElementById('levelUpSound');
+                if (levelUpSound) {
+                    levelUpSound.currentTime = 0;
+                    levelUpSound.play().catch(() => {});
+                }
+            }, 400);
+        }
+
+        function showBadgeModal(badge) {
+            setTimeout(() => {
+                document.getElementById('badgeIconLarge').textContent = badge.icon;
+                document.getElementById('badgeIconLarge').className = `badge-icon-large ${badge.class}`;
+                document.getElementById('badgeModalTitle').textContent = 'Badge Terbuka!';
+                document.getElementById('badgeModalSubtitle').textContent = `Anda telah mencapai level ${badge.level} dan mendapatkan badge ${badge.name}!`;
+                document.getElementById('badgeModal').classList.add('active');
+                
+                const badgeSound = document.getElementById('badgeSound');
+                if (badgeSound) {
+                    badgeSound.currentTime = 0;
+                    badgeSound.play().catch(() => {});
+                }
+            }, 200);
+        }
+
+        function showLevelDetailModal() {
+            const levelData = calculateLevel(appData.exp);
+            const expPercent = (levelData.currentExp / levelData.expForNextLevel) * 100;
+            
+            document.getElementById('detailCurrentLevel').textContent = levelData.level;
+            document.getElementById('detailNextLevel').textContent = levelData.level + 1;
+            document.getElementById('expBar').style.width = `${expPercent}%`;
+            document.getElementById('expText').textContent = `${levelData.currentExp} / ${levelData.expForNextLevel} EXP`;
+            
+            const badgesGrid = document.getElementById('badgesGrid');
+            badgesGrid.innerHTML = '';
+            
+            BADGES.forEach(badge => {
+                const isUnlocked = appData.level >= badge.level;
+                const badgeItem = document.createElement('div');
+                badgeItem.className = `badge-item ${isUnlocked ? 'unlocked' : 'locked'}`;
+                const levelText = badge.level === Infinity ? '∞' : `Lvl ${badge.level}`;
+                badgeItem.innerHTML = `
+                    <div class="badge-icon ${badge.class}">${badge.icon}</div>
+                    <div class="badge-name">${badge.name}</div>
+                    <div class="badge-level">${levelText}</div>
+                `;
+                badgesGrid.appendChild(badgeItem);
+            });
+            
+            document.getElementById('levelDetailModal').classList.add('active');
+        }
+
+        function resetWithSameTarget() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+
+            appData.startDate = tomorrow;
+            appData.progress = {};
+            appData.sessionExpClaimed = {};
+            hasShownSuccess = false;
+
+            appData.schedule = generateSchedule();
+            saveData();
+
+            updateHeaderInfo();
+            renderCalendar();
+            selectToday();
+        }
+
+        function resetWithNewTarget(newDuration) {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+
+            appData.startDate = tomorrow;
+            appData.duration = newDuration;
+            appData.progress = {};
+            appData.sessionExpClaimed = {};
+            hasShownSuccess = false;
+
+            appData.schedule = generateSchedule();
+            saveData();
+
+            updateHeaderInfo();
+            renderCalendar();
+            selectToday();
+        }
+
+        function setupSwipeGestures() {
+            let touchStartX = 0, touchStartY = 0, currentTranslateX = 0, isSwiping = false, isHorizontalSwipe = false;
+            
+            sessionList.addEventListener('touchstart', (e) => { 
+                touchStartX = e.changedTouches[0].screenX; 
+                touchStartY = e.changedTouches[0].screenY; 
+                isSwiping = true; 
+                isHorizontalSwipe = false; 
+                currentTranslateX = 0; 
+                sessionList.classList.add('swiping'); 
+            }, { passive: true });
+            
+            sessionList.addEventListener('touchmove', (e) => {
+                if (!isSwiping) return;
+                const touchX = e.changedTouches[0].screenX, touchY = e.changedTouches[0].screenY, diffX = touchX - touchStartX, diffY = touchY - touchStartY;
+                if (!isHorizontalSwipe && Math.abs(diffX) > 10) isHorizontalSwipe = Math.abs(diffX) > Math.abs(diffY);
+                if (isHorizontalSwipe) { 
+                    e.preventDefault(); 
+                    currentTranslateX = diffX * 0.6; 
+                    sessionList.style.transform = `translateX(${currentTranslateX}px)`; 
+                    if (diffX > 30 || diffX < -30) sessionList.style.opacity = '0.8'; 
+                }
+            }, { passive: false });
+            
+            sessionList.addEventListener('touchend', (e) => {
+                if (!isSwiping) return;
+                const touchEndX = e.changedTouches[0].screenX, diffX = touchEndX - touchStartX;
+                sessionList.classList.remove('swiping'); sessionList.style.transform = ''; sessionList.style.opacity = '';
+                if (isHorizontalSwipe && Math.abs(diffX) > 80) { 
+                    if (diffX > 0 && selectedDay > 0) handleSwipe('right'); 
+                    else if (diffX < 0 && selectedDay < appData.schedule.length - 1) handleSwipe('left'); 
+                }
+                isSwiping = false; isHorizontalSwipe = false; currentTranslateX = 0;
+            }, { passive: true });
+            
+            let mouseStartX = 0, isMouseDown = false;
+            sessionList.addEventListener('mousedown', (e) => { mouseStartX = e.screenX; isMouseDown = true; sessionList.classList.add('swiping'); });
+            sessionList.addEventListener('mousemove', (e) => { 
+                if (!isMouseDown) return; 
+                const diffX = e.screenX - mouseStartX; 
+                sessionList.style.transform = `translateX(${diffX * 0.6}px)`; 
+                if (Math.abs(diffX) > 30) sessionList.style.opacity = '0.8'; 
+            });
+            sessionList.addEventListener('mouseup', (e) => { 
+                if (!isMouseDown) return; 
+                const diffX = e.screenX - mouseStartX; 
+                sessionList.classList.remove('swiping'); sessionList.style.transform = ''; sessionList.style.opacity = ''; 
+                if (Math.abs(diffX) > 80) handleSwipe(diffX < 0 ? 'left' : 'right'); 
+                isMouseDown = false; 
+            });
+            sessionList.addEventListener('mouseleave', () => { 
+                if (isMouseDown) { 
+                    sessionList.classList.remove('swiping'); sessionList.style.transform = ''; sessionList.style.opacity = ''; 
+                    isMouseDown = false; 
+                } 
+            });
+        }
+
+        function handleSwipe(direction) { 
+            if (selectedDay === null) return; 
+            if (direction === 'left' && selectedDay < appData.schedule.length - 1) { 
+                selectDay(selectedDay + 1); 
+                scrollToSelectedDay(); 
+            } else if (direction === 'right' && selectedDay > 0) { 
+                selectDay(selectedDay - 1); 
+                scrollToSelectedDay(); 
+            } 
+        }
+
+        function scrollToSelectedDay() { 
+            setTimeout(() => { 
+                const selectedCard = calendarScroll.children[selectedDay]; 
+                if (selectedCard) selectedCard.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); 
+            }, 100); 
+        }
+
+        function setupSurahList() { 
+            surahListGrid.innerHTML = ''; 
+            surahInfo.forEach(surah => { 
+                const item = document.createElement('div'); 
+                item.className = 'surah-list-item'; 
+                item.innerHTML = `<div class="surah-number-box">${surah.number}</div><div class="surah-list-info"><div class="surah-list-name">${surah.name}</div><div class="surah-list-arabic">${surah.arabicName}</div><div class="surah-list-meta">${surah.type} • ${surah.verses} Ayat</div></div>`; 
+                item.addEventListener('click', () => openSurahReader(surah.number)); 
+                surahListGrid.appendChild(item); 
+            }); 
+        }
+
+        function openSurahSheet() { 
+            surahSheetOverlay.classList.add('active'); 
+            document.body.style.overflow = 'hidden'; 
+            fabMain.classList.remove('active'); 
+        }
+
+        function closeSurahSheet() { 
+            surahSheetOverlay.classList.remove('active'); 
+            document.body.style.overflow = ''; 
+        }
+
+        function openSurahReader(surahNumber) {
+            closeSurahSheet();
+            const surah = quranData.find(s => s.number === surahNumber);
+            if (!surah || surah.ayahs.length === 0) { 
+                alert('Data surah tidak tersedia'); 
+                return; 
+            }
+            currentSession = { pages: "Full", surahRanges: [{surah: surahNumber, startAyah: 1, endAyah: surah.verses}], reading: `${surah.name} (1-${surah.verses})` };
+            currentSessionIndex = null; currentDateKey = null;
+            document.getElementById('readerTitle').textContent = surah.name; 
+            document.getElementById('readerSubtitle').textContent = `${surah.verses} Ayat`; 
+            
+            // Reset mode and font size for new reader
+            readerContent.className = 'reader-content mode-list font-normal';
+            currentMode = 'list';
+            currentFontSizeIndex = 0;
+            modeSwitchBtn.classList.remove('active');
+            
+            renderSurahContent(surahNumber);
+            
+            document.getElementById('readerCompleteSection').style.display = 'none'; 
+            readerOverlay.classList.add('active'); 
+            document.body.style.overflow = 'hidden';
+            
+            setTimeout(() => { 
+                readerContent.scrollTop = 0; 
+                window.scrollTo(0, 0); 
+            }, 10);
+        }
+
+        async function loadQuranData() {
+            try {
+                const response = await fetch('assets/quran-uthmani.txt'), text = await response.text(), lines = text.trim().split('\n');
+                const surahMap = new Map();
+                lines.forEach(line => { 
+                    const parts = line.split('|'); 
+                    if (parts.length >= 3) { 
+                        const surahNum = parseInt(parts[0]), ayahNum = parseInt(parts[1]), ayahText = parts[2]; 
+                        if (!surahMap.has(surahNum)) { 
+                            const surah = surahInfo.find(s => s.number === surahNum); 
+                            surahMap.set(surahNum, { number: surahNum, name: surah ? surah.name : `Surah ${surahNum}`, arabicName: surah ? surah.arabicName : '', verses: surah ? surah.verses : 0, type: surah ? surah.type : 'Makkiyah', ayahs: [] }); 
+                        } 
+                        surahMap.get(surahNum).ayahs.push({ number: ayahNum, arabic: ayahText }); 
+                    } 
+                });
+                quranData = Array.from(surahMap.values()); 
+                console.log('Quran data loaded:', quranData.length, 'surahs');
+            } catch (error) { 
+                console.error('Error loading Quran data:', error); 
+                quranData = []; 
+            }
+        }
+
+        function initializeApp(startDate, duration) {
+            appData.startDate = startDate; 
+            appData.duration = duration; 
+            appData.schedule = generateSchedule();
+            if (!appData.progress) appData.progress = {};
+            if (!appData.level) appData.level = 1;
+            if (!appData.exp) appData.exp = 0;
+            if (!appData.unlockedBadges) appData.unlockedBadges = [];
+            
+            lastShownLevel = appData.level;
+            lastUnlockedBadges = [...appData.unlockedBadges];
+            
+            saveData(); 
+            setupScreen.classList.add('hidden'); 
+            mainApp.classList.add('active'); 
+            updateHeaderInfo(); 
+            renderCalendar(); 
+            selectToday();
+        }
+
+        function generateSchedule() {
+            const baseSchedule = getScheduleForDuration(appData.duration), schedule = [];
+            for (let i = 0; i < appData.duration; i++) { 
+                const date = new Date(appData.startDate); 
+                date.setDate(date.getDate() + i); 
+                const dayData = baseSchedule[i]; 
+                if (dayData) schedule.push({ day: i + 1, date: date, sessions: dayData.sessions }); 
+            }
+            return schedule;
+        }
+
+        function saveData() { 
+            const dataToSave = { 
+                startDate: appData.startDate ? appData.startDate.toISOString() : null, 
+                duration: appData.duration, 
+                progress: appData.progress,
+                sessionExpClaimed: appData.sessionExpClaimed,
+                level: appData.level,
+                exp: appData.exp,
+                unlockedBadges: appData.unlockedBadges
+            }; 
+            localStorage.setItem('quranTrackerAlka', JSON.stringify(dataToSave)); 
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('quranTrackerAlka');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.startDate) {
+                    appData.startDate = new Date(parsed.startDate);
+                    appData.duration = parsed.duration || 60;
+                    appData.progress = parsed.progress || {};
+                    appData.sessionExpClaimed = parsed.sessionExpClaimed || {};
+                    appData.level = parsed.level || 1;
+                    appData.exp = parsed.exp || 0;
+                    appData.unlockedBadges = parsed.unlockedBadges || [];
+                    
+                    lastShownLevel = appData.level;
+                    lastUnlockedBadges = [...appData.unlockedBadges];
+                    
+                    appData.schedule = generateSchedule(); 
+                    setupScreen.classList.add('hidden'); 
+                    mainApp.classList.add('active'); 
+                    updateHeaderInfo(); 
+                    renderCalendar(); 
+                    selectToday();
+                }
+            }
+        }
+
+        function updateHeaderInfo() {
+            const endDate = new Date(appData.startDate); 
+            endDate.setDate(endDate.getDate() + appData.duration - 1);
+            const today = new Date(), daysLeft = Math.max(0, Math.ceil((endDate - today) / (1000 * 60 * 60 * 24)) + 1);
+            
+            document.getElementById('startDateDisplay').textContent = formatDateShort(appData.startDate); 
+            document.getElementById('endDateDisplay').textContent = formatDateShort(endDate);
+            document.getElementById('daysLeftDisplay').textContent = daysLeft + ' hari'; 
+            document.getElementById('calendarTitle').textContent = `Jadwal ${appData.duration} Hari`;
+            
+            updateDateInfoProgress();
+            updateLevelDisplay();
+        }
+
+        function updateDateInfoProgress() {
+            let totalSessions = 0, completedSessions = 0;
+            appData.schedule.forEach((item) => { 
+                const dateKey = item.date.toISOString().split('T')[0]; 
+                const dayProgress = appData.progress[dateKey] || []; 
+                totalSessions += item.sessions.length; 
+                completedSessions += dayProgress.filter(s => s).length; 
+            });
+            const percent = totalSessions > 0 ? Math.round((completedSessions / totalSessions) * 100) : 0;
+            document.getElementById('dateInfoProgress').style.width = percent + '%';
+            
+            if (completedSessions < totalSessions) { 
+                hasShownSuccess = false; 
+            }
+            if (completedSessions === totalSessions && totalSessions > 0 && !hasShownSuccess) { 
+                hasShownSuccess = true; 
+                setTimeout(() => { showSuccessModal(); }, 500); 
+            }
+        }
+
+        function formatDateShort(date) { 
+            return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }); 
+        }
+
+        function formatDateFull(date) { 
+            const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'], months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']; 
+            return { weekday: days[date.getDay()], day: date.getDate(), month: months[date.getMonth()] }; 
+        }
+
+        function renderCalendar() {
+            calendarScroll.innerHTML = ''; 
+            const today = new Date(); 
+            today.setHours(0, 0, 0, 0);
+            
+            appData.schedule.forEach((item, index) => { 
+                const dateInfo = formatDateFull(item.date), dateKey = item.date.toISOString().split('T')[0], dayProgress = appData.progress[dateKey] || [], completedCount = dayProgress.filter(s => s).length, isCompleted = completedCount === item.sessions.length && item.sessions.length > 0, isToday = item.date.getTime() === today.getTime(); 
+                const dayCard = document.createElement('div'); 
+                dayCard.className = `day-card ${isCompleted ? 'completed' : ''} ${isToday ? 'today' : ''}`; 
+                dayCard.dataset.index = index; 
+                dayCard.innerHTML = `<div class="day-weekday">${dateInfo.weekday}</div><div class="day-number">${dateInfo.day}</div><div class="day-month">${dateInfo.month}</div><div class="day-progress-mini"><div class="day-progress-fill" style="width: ${item.sessions.length > 0 ? (completedCount / item.sessions.length) * 100 : 0}%"></div></div>`; 
+                dayCard.addEventListener('click', () => selectDay(index)); 
+                calendarScroll.appendChild(dayCard); 
+            });
+        }
+
+        function selectToday() {
+            const today = new Date(); 
+            today.setHours(0, 0, 0, 0);
+            const todayIndex = appData.schedule.findIndex(item => { 
+                const itemDate = new Date(item.date); 
+                itemDate.setHours(0, 0, 0, 0); 
+                return itemDate.getTime() === today.getTime(); 
+            });
+            if (todayIndex !== -1) { 
+                selectDay(todayIndex); 
+                setTimeout(() => { 
+                    const todayCard = calendarScroll.children[todayIndex]; 
+                    if (todayCard) todayCard.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); 
+                }, 100); 
+            } else selectDay(0);
+        }
+
+        function selectDay(index) {
+            selectedDay = index; 
+            currentDayIndex = index; 
+            document.querySelectorAll('.day-card').forEach((card, i) => { 
+                card.classList.toggle('active', i === index); 
+            });
+            
+            emptyState.style.display = 'none'; 
+            sessionContent.style.display = 'block';
+            
+            const dayData = appData.schedule[index], dateKey = dayData.date.toISOString().split('T')[0], dayProgress = appData.progress[dateKey] || [];
+            const dateInfo = formatDateFull(dayData.date); 
+            document.getElementById('panelTitle').textContent = `Hari ${dayData.day} - ${dateInfo.day} ${dateInfo.month}`; 
+            document.getElementById('panelSubtitle').textContent = `${dayData.sessions.length} sesi membaca`;
+            
+            const completedCount = dayProgress.filter(s => s).length; 
+            document.getElementById('completedCount').textContent = `${completedCount}/${dayData.sessions.length}`; 
+            renderSessions(dayData, dayProgress, dateKey);
+        }
+
+        function renderSessions(dayData, dayProgress, dateKey) {
+            sessionList.innerHTML = '';
+            dayData.sessions.forEach((session, index) => { 
+                const isCompleted = dayProgress[index] || false; 
+                const sessionItem = document.createElement('div'); 
+                sessionItem.className = `session-item ${isCompleted ? 'completed' : ''}`; 
+                sessionItem.innerHTML = `<div class="session-header"><div class="session-checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div><span class="session-number">Sesi ${index + 1}</span><span class="session-pages">Hal. ${session.pages}</span></div><div class="session-reading">${session.reading}</div><div class="session-actions"><button class="btn-read" data-session="${index}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>Baca</button></div>`;
+                
+                sessionItem.addEventListener('click', (e) => { 
+                    if (!e.target.closest('.btn-read')) toggleSession(dateKey, index); 
+                });
+                
+                const readBtn = sessionItem.querySelector('.btn-read'); 
+                readBtn.addEventListener('click', (e) => { 
+                    e.stopPropagation(); 
+                    openReader(session, index, dateKey); 
+                });
+                
+                sessionList.appendChild(sessionItem);
+            });
+        }
+
+        function toggleSession(dateKey, sessionIndex) {
+            if (!appData.progress[dateKey]) appData.progress[dateKey] = [];
+            if (!appData.sessionExpClaimed) appData.sessionExpClaimed = {};
+
+            const wasCompleted = appData.progress[dateKey][sessionIndex] || false;
+            appData.progress[dateKey][sessionIndex] = !wasCompleted;
+
+            const nowCompleted = appData.progress[dateKey][sessionIndex];
+            const key = dateKey + "-" + sessionIndex;
+
+            if (nowCompleted && !appData.sessionExpClaimed[key]) {
+                addExp(LEVEL_CONFIG.EXP_PER_SESSION);
+                appData.sessionExpClaimed[key] = true;
+            }
+
+            saveData();
+
+            const dayData = appData.schedule[selectedDay],
+              dayProgress = appData.progress[dateKey] || [];
+
+            renderSessions(dayData, dayProgress, dateKey);
+            updateDateInfoProgress();
+            renderCalendar();
+
+            const completedCount = dayProgress.filter(s => s).length;
+            document.getElementById('completedCount').textContent =
+                `${completedCount}/${dayData.sessions.length}`;
+
+            if (!wasCompleted &&
+                completedCount === dayData.sessions.length &&
+                dayData.sessions.length > 0) {
+
+                setTimeout(() => {
+                    showDailyModal();
+
+                    const sound = document.getElementById("finishSound");
+                    if (sound) {
+                        sound.currentTime = 0;
+                        sound.play().catch(()=>{});
+                    }
+
+                }, 300);
+            }
+        }
+
+        function openReader(session, sessionIndex, dateKey) {
+            currentSession = session; 
+            currentSessionIndex = sessionIndex; 
+            currentDateKey = dateKey;
+            
+            const surahRanges = session.surahRanges;
+            if (surahRanges.length > 1) { 
+                const firstSurah = surahInfo.find(s => s.number === surahRanges[0].surah), lastSurah = surahInfo.find(s => s.number === surahRanges[surahRanges.length - 1].surah); 
+                document.getElementById('readerTitle').textContent = `${firstSurah.name} - ${lastSurah.name}`; 
+            } else { 
+                const surah = surahInfo.find(s => s.number === surahRanges[0].surah); 
+                document.getElementById('readerTitle').textContent = surah.name; 
+            }
+            
+            document.getElementById('readerSubtitle').textContent = `Halaman ${session.pages}`; 
+            
+            // Reset mode and font size for new reader
+            readerContent.className = 'reader-content mode-list font-normal';
+            currentMode = 'list';
+            currentFontSizeIndex = 0;
+            modeSwitchBtn.classList.remove('active');
+            
+            renderReaderContent();
+            
+            document.getElementById('readerCompleteSection').style.display = 'flex'; 
+            readerOverlay.classList.add('active'); 
+            document.body.style.overflow = 'hidden';
+            
+            setTimeout(() => { 
+                readerContent.scrollTop = 0; 
+                window.scrollTo(0, 0); 
+            }, 10);
+        }
+
+        function closeReader() { 
+            readerOverlay.classList.remove('active'); 
+            document.body.style.overflow = ''; 
+            currentSession = null; 
+            currentSessionIndex = null; 
+            currentDateKey = null; 
+        }
+
+        function showDailyModal() { 
+            document.getElementById('dailyModal').classList.add('active'); 
+        }
+
+        function completeSessionAndExit(dateKey, sessionIndex) {
+            if (!appData.progress[dateKey]) appData.progress[dateKey] = []; 
+            
+            const wasCompleted = appData.progress[dateKey][sessionIndex];
+            appData.progress[dateKey][sessionIndex] = true; 
+            
+            if (!wasCompleted) {
+                addExp(LEVEL_CONFIG.EXP_PER_SESSION);
+            }
+            
+            saveData(); 
+            closeReader();
+            
+            const dayData = appData.schedule[selectedDay], dayProgress = appData.progress[dateKey] || []; 
+            renderSessions(dayData, dayProgress, dateKey); 
+            updateDateInfoProgress(); 
+            renderCalendar();
+            
+            const completedCount = dayProgress.filter(s => s).length; 
+            document.getElementById('completedCount').textContent = `${completedCount}/${dayData.sessions.length}`;
+            
+            if (completedCount === dayData.sessions.length && dayData.sessions.length > 0) 
+                setTimeout(() => { showDailyModal(); }, 300);
+        }
+
+        function showSuccessModal() {
+            successModal.classList.add('active');
+            startConfetti();
+            
+            const khatamSound = document.getElementById('khatamSound');
+            if (khatamSound) {
+                khatamSound.currentTime = 0;
+                setTimeout(() => {
+                    khatamSound.play().catch(() => {});
+                }, 400);
+            }
+        }
+        
+        function startConfetti() {
+            const canvas = document.getElementById('confettiCanvas'), ctx = canvas.getContext('2d'); 
+            canvas.width = window.innerWidth; 
+            canvas.height = window.innerHeight;
+            
+            const confettiCount = 200, confetti = [], colors = ['#00D26A', '#00E676', '#00B85C', '#FFD700', '#FF6B6B', '#4ECDC4'];
+            
+            for (let i = 0; i < confettiCount; i++) 
+                confetti.push({ 
+                    x: Math.random() * canvas.width, 
+                    y: Math.random() * canvas.height - canvas.height, 
+                    size: Math.random() * 10 + 5, 
+                    color: colors[Math.floor(Math.random() * colors.length)], 
+                    speed: Math.random() * 3 + 2, 
+                    angle: Math.random() * 360, 
+                    spin: Math.random() * 10 - 5 
+                });
+            
+            let animationId, frameCount = 0;
+            
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                confetti.forEach((c) => { 
+                    c.y += c.speed; 
+                    c.angle += c.spin; 
+                    c.x += Math.sin(c.angle * Math.PI / 180) * 2; 
+                    ctx.save(); 
+                    ctx.translate(c.x, c.y); 
+                    ctx.rotate(c.angle * Math.PI / 180); 
+                    ctx.fillStyle = c.color; 
+                    ctx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size); 
+                    ctx.restore(); 
+                    if (c.y > canvas.height) { 
+                        c.y = -c.size; 
+                        c.x = Math.random() * canvas.width; 
+                    } 
+                });
+                frameCount++; 
+                if (frameCount < 300) animationId = requestAnimationFrame(animate); 
+                else ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            animate();
+            
+            closeModalBtn.addEventListener('click', () => { 
+                cancelAnimationFrame(animationId); 
+                ctx.clearRect(0, 0, canvas.width, canvas.height); 
+            }, { once: true });
+        }
+    </script>
+</body>
+</html>
