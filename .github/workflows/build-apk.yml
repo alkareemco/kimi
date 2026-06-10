@@ -1,4 +1,4 @@
-name: Build WebView APK (NO TEMPLATE)
+name: Build WebView APK
 
 on:
   workflow_dispatch:
