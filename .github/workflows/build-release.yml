@@ -82,22 +82,21 @@ jobs:
           APK="${{ steps.version.outputs.APK_NAME }}"
           cp android/app/build/outputs/apk/debug/app-debug.apk "${APK}"
           ls -lh "${APK}"
-
       - name: Generate QR code PNG
         env:
           DOWNLOAD_URL: ${{ steps.version.outputs.DOWNLOAD_URL }}
         run: |
           pip install "qrcode[pil]" Pillow --quiet
           cat > /tmp/gen_qr.py << 'PYEOF'
-import qrcode, os
-url = os.environ["DOWNLOAD_URL"]
-qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=12, border=4)
-qr.add_data(url)
-qr.make(fit=True)
-img = qr.make_image(fill_color="#0A0E14", back_color="#F8F4E9")
-img.save("qr-code.png")
-print(f"QR saved for: {url}")
-PYEOF
+          import qrcode, os
+          url = os.environ["DOWNLOAD_URL"]
+          qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=12, border=4)
+          qr.add_data(url)
+          qr.make(fit=True)
+          img = qr.make_image(fill_color="#0A0E14", back_color="#F8F4E9")
+          img.save("qr-code.png")
+          print("QR saved for: " + url)
+          PYEOF
           python3 /tmp/gen_qr.py
 
       - name: URL-encode download URL
@@ -106,14 +105,14 @@ PYEOF
           RAW_URL: ${{ steps.version.outputs.DOWNLOAD_URL }}
         run: |
           cat > /tmp/encode_url.py << 'PYEOF'
-import os
-from urllib.parse import quote
-url = os.environ["RAW_URL"]
-encoded = quote(url, safe="")
-with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-    f.write(f"ENCODED_URL={encoded}\n")
-print("URL encoded")
-PYEOF
+          import os
+          from urllib.parse import quote
+          url = os.environ["RAW_URL"]
+          encoded = quote(url, safe="")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write("ENCODED_URL=" + encoded + "\n")
+          print("URL encoded")
+          PYEOF
           python3 /tmp/encode_url.py
 
       - name: Generate changelog
@@ -144,11 +143,11 @@ PYEOF
 
             ![Download QR](https://api.qrserver.com/v1/create-qr-code/?size=280x280&ecc=H&data=${{ steps.encode.outputs.ENCODED_URL }})
 
-            > Android: Open camera, point at QR code, tap notification. Download starts immediately.
+            > Android: Open camera, point at QR, tap notification. Download starts immediately.
 
             ### Direct download
 
-            [Download APK - ${{ steps.version.outputs.APK_NAME }}](${{ steps.version.outputs.DOWNLOAD_URL }})
+            [Download APK](${{ steps.version.outputs.DOWNLOAD_URL }})
 
             > First install: Settings > Security > Install unknown apps > allow your browser.
 
@@ -170,7 +169,7 @@ PYEOF
           WEBHOOK_URL: ${{ secrets.CODEWORDS_WEBHOOK_URL }}
         run: |
           if [ -z "$WEBHOOK_URL" ]; then
-            echo "No webhook URL configured, skipping email"
+            echo "No webhook configured, skipping email"
             exit 0
           fi
           VERSION="${{ steps.version.outputs.VERSION }}"
@@ -181,5 +180,5 @@ PYEOF
           curl -s -f -X POST "${WEBHOOK_URL}" \
             -H "Content-Type: application/json" --max-time 30 \
             -d "{\"download_url\":\"${DURL}\",\"version\":\"${VERSION}\",\"release_url\":\"${RURL}\",\"apk_filename\":\"${APK}\",\"release_notes\":\"${NOTES}\",\"app_name\":\"Quran Tracker\"}" \
-            && echo "Email notification sent" \
-            || echo "Webhook failed (build still succeeded)"
+            && echo "Email sent" \
+            || echo "Webhook failed (non-fatal)"
