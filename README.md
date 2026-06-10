@@ -1,90 +1,183 @@
----
+# 📖 Quran Tracker PWA
 
-Deskripsi
+<p align="center">
+  <img src="https://img.shields.io/badge/PWA-Ready-success?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Mobile-Friendly-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Responsive-Design-orange?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
+</p>
 
-Qur'an Tracker adalah aplikasi web PWA (Progressive Web App) yang membantu muslim merencanakan dan menjadwalkan khatam Qur'an. Dengan antarmuka yang bersih dan modern, pengguna dapat memilih tanggal mulai dan durasi khatam sesuai keinginan — mulai dari 30 hari (1 juz per hari) hingga 300 hari untuk pace yang lebih santai.
+<p align="center">
+  A modern Progressive Web App for tracking Quran reading progress,
+  managing daily targets, and building a consistent reading habit.
+</p>
 
-Fitur
-
-- Pilih Tanggal Mulai — Fleksibel menentukan kapan memulai perjalanan khatam
-- Pilihan Durasi — 30, 60, atau 300 hari sesuai kapasitas membaca
-- Tampilan Jadwal Harian — breakdown halaman/juz yang har dibaca setiap hari
-- Tema Gelap — Nyaman di mata, cocok untuk penggunaan malam hari
-- PWA Ready — Bisa di-install ke homescreen seperti aplikasi native
-- Responsive Design — Optimal di desktop, tablet, maupun smartphone
-
-Screenshot
-
-Cara Penggunaan
-
-1. Buka [alkablogz.my.id/quran](https://alkablogz.my.id/quran)
-2. Pilih tanggal mulai khatam
-3. Pilih durasi yang diinginkan:
-   - 30 hari — Untuk khatam 1 bulan (1 juz/hari)
-   - 60 hari — Untuk khatam 2 bulan (1/2 juz/hari)
-   - 300 hari — Untuk pace santai (±2 halaman/hari)
-4. Klik "Mulai Perjalanan"
-5. Ikuti jadwal harian yang muncul
-
-Install sebagai Aplikasi (PWA)
-
-Android (Chrome)
-1. Buka website di Chrome
-2. Tap menu ⋮ → "Tambahkan ke Layar Utama"
-3. Selesai! Aplikasi muncul di homescreen
-
-iOS (Safari)
-1. Buka website di Safari
-2. Tap tombol Bagikan (Share)
-3. Pilih "Tambahkan ke Layar Utama"
-4. Selesai!
-
-Desktop (Chrome/Edge)
-1. Buka website
-2. Klik ikon Install di address bar (kanan atas)
-3. Atau klik menu ⋮ → Install Qur'an Tracker
-
-Teknologi
-
-- HTML5 — Markup semantic
-- CSS3 — Styling modern dengan custom properties
-- JavaScript (Vanilla) — Logika aplikasi tanpa framework berat
-- Service Worker — PWA offline capability
-- Local Storage — Menyimpan data jadwal secara lokal
-- Manifest.json — Konfigurasi PWA
-
-Struktur Folder
-
-```
-quran-tracker/
-├── index.html          # Entry point aplikasi
-├── manifest.json       # PWA manifest
-├── sw.js               # Service Worker
-├── css/
-│   └── style.css       # Styling utama
-├── js/
-│   └── app.js          # Logika aplikasi
-└── icons/
-    ├── icon-72x72.png
-    ├── icon-96x96.png
-    ├── icon-128x128.png
-    ├── icon-144x144.png
-    ├── icon-152x152.png
-    ├── icon-192x192.png
-    ├── icon-384x384.png
-    └── icon-512x512.png
-```
-
-Manfaat Khatam Qur'an
-
-> "Sebaik-baik kalian adalah yang belajar Qur'an dan mengajarkannya."
-
-— HR. Bukhari
-
-Aplikasi ini dibuat untuk memudahkan umat Islam dalam menjadwalkan bacaan Qur'an secara konsisten dan teratur. Dengan membagi target khatam ke dalam jadwal harian, harapan kita bisa lebih istiqomah dalam membaca Qur'an.
+<p align="center">
+  <a href="https://alkablogz.my.id/quran">
+    <img src="https://img.shields.io/badge/🚀_Live_Demo-Open_Website-success?style=for-the-badge">
+  </a>
+</p>
 
 ---
 
-Lisensi
+## ✨ Features
 
-Projek ini gratis untuk digunakan personal maupun komersial.
+- 📖 Track Quran reading progress
+- 🎯 Set daily reading goals
+- 📊 Progress statistics
+- 📱 Fully responsive design
+- ⚡ Fast loading experience
+- 🔄 Offline support (PWA)
+- 💾 Local storage data persistence
+- 🌙 Mobile-first interface
+- 🔔 Installable on Android & Desktop
+
+---
+
+## 🌐 Live Website
+
+**Open the application here:**
+
+https://alkablogz.my.id/quran
+
+---
+
+## 📸 Preview
+
+### Home Screen
+
+<p align="center">
+  <img src="https://placehold.co/900x450?text=Quran+Tracker+Preview" alt="Preview">
+</p>
+
+> Replace the image above with a real screenshot later if desired.
+
+---
+
+## 🚀 Installation
+
+### Clone Repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/quran-tracker-pwa.git
+```
+
+### Enter Project Directory
+
+```bash
+cd quran-tracker-pwa
+```
+
+### Run Local Server
+
+Python:
+
+```bash
+python -m http.server 8000
+```
+
+Then open:
+
+```text
+http://localhost:8000
+```
+
+---
+
+## 📂 Project Structure
+
+```text
+quran-tracker-pwa/
+│
+├── index.html
+├── manifest.json
+├── service-worker.js
+├── assets/
+│   ├── css/
+│   ├── js/
+│   └── images/
+│
+└── README.md
+```
+
+---
+
+## ⚙️ Technologies Used
+
+- HTML5
+- CSS3
+- JavaScript (Vanilla JS)
+- Progressive Web App (PWA)
+- Service Worker
+- Web App Manifest
+- Local Storage API
+
+---
+
+## 📱 Progressive Web App
+
+This project supports:
+
+- Offline access
+- Home screen installation
+- App-like experience
+- Fast caching strategy
+- Responsive mobile interface
+
+---
+
+## 🎯 Roadmap
+
+- [x] Reading progress tracker
+- [x] PWA support
+- [x] Responsive UI
+- [ ] Cloud synchronization
+- [ ] Multi-device support
+- [ ] Reading reminders
+- [ ] Achievement system
+- [ ] Export & backup data
+
+---
+
+## 🤝 Contributing
+
+Contributions, issues and feature requests are welcome.
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+---
+
+## 📊 Project Status
+
+**Actively Maintained**
+
+New features and improvements may be added over time.
+
+---
+
+## 👨‍💻 Author
+
+Developed and maintained by **Faiz Karim**
+
+Website:
+https://alkablogz.my.id
+
+---
+
+## ⭐ Support
+
+If you find this project useful:
+
+- Star this repository
+- Share it with others
+- Give feedback and suggestions
+
+---
+
+<p align="center">
+  Made with ❤️ for Quran readers around the world
+</p>
