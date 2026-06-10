@@ -4,15 +4,13 @@ Modern Quran Reading Progress Tracker
 
 Track your Quran reading journey, monitor khatam progress, and install the application on any device through a lightweight Progressive Web App.
 
-<br>""Website" (https://img.shields.io/badge/Live-Demo-success?style=for-the-badge)" (https://alkablogz.my.id/quran)
-""Release" (https://img.shields.io/github/v/release/alkareemco/kimi?style=for-the-badge)" (https://github.com/alkareemco/kimi/releases)
+<br>""Live Demo" (https://img.shields.io/badge/Live_Demo-Visit_Website-success?style=for-the-badge)" (https://alkablogz.my.id/quran)
+""Latest Release" (https://img.shields.io/github/v/release/alkareemco/kimi?style=for-the-badge)" (https://github.com/alkareemco/kimi/releases)
 ""Downloads" (https://img.shields.io/github/downloads/alkareemco/kimi/total?style=for-the-badge)" (https://github.com/alkareemco/kimi/releases)
-""License" (https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)" (#license)
 
 <br>"Repo Size" (https://img.shields.io/github/repo-size/alkareemco/kimi)
 "Last Commit" (https://img.shields.io/github/last-commit/alkareemco/kimi)
 "Top Language" (https://img.shields.io/github/languages/top/alkareemco/kimi)
-"Release Count" (https://img.shields.io/badge/Releases-31-success)
 "PWA" (https://img.shields.io/badge/PWA-Ready-brightgreen)
 "Offline" (https://img.shields.io/badge/Offline-Supported-blue)
 
@@ -26,7 +24,7 @@ Access the application directly from your browser or install it as a Progressive
 
 ---
 
-✨ Key Features
+✨ Features
 
 - 📖 Track Quran reading progress
 - 📊 Monitor khatam completion
@@ -41,16 +39,15 @@ Access the application directly from your browser or install it as a Progressive
 
 📦 Releases
 
-This project maintains a complete version archive.
+The project maintains a complete public release archive.
 
-Available releases include:
+Series| Versions
+v0.x| v0.2.0 → v0.9.0
+v1.x| v1.0.0 → v1.9.0
+v2.x| v2.0.0 → v2.9.0
+v3.x| v3.0.0 → v3.2.0
 
-v0.2.0 → v0.9.0
-v1.0.0 → v1.9.0
-v2.0.0 → v2.9.0
-v3.0.0 → v3.2.0
-
-Browse all releases:
+➡️ Full release history:
 
 https://github.com/alkareemco/kimi/releases
 
@@ -58,42 +55,42 @@ https://github.com/alkareemco/kimi/releases
 
 🛠 Technology Stack
 
-HTML5
-CSS3
-JavaScript
-Service Worker
-Web App Manifest
-Progressive Web App (PWA)
+Technology| Usage
+HTML5| Application Structure
+CSS3| User Interface
+JavaScript| Application Logic
+Service Worker| Offline Support
+Web Manifest| PWA Installation
 
 ---
 
 📱 Progressive Web App
 
-Quran Tracker can be installed directly from your browser.
+Install directly from your browser.
 
 Android
 
-Chrome → Menu → Install App
+Chrome → Install App
 
 Desktop
 
 Chrome / Edge → Install Application
 
-iOS
+iPhone / iPad
 
 Safari → Share → Add to Home Screen
 
 ---
 
-📈 Development History
+📈 Development Timeline
 
-v0.x  Initial prototype
+v0.x  Initial Prototype
 │
-├── v1.x  Core functionality
+├── v1.x  Core Features
 │
-├── v2.x  Feature expansion
+├── v2.x  Feature Expansion
 │
-└── v3.x  Stable public releases
+└── v3.x  Stable Public Releases
 
 ---
 
@@ -101,15 +98,16 @@ v0.x  Initial prototype
 
 - 30+ public releases
 - Progressive Web App support
-- Mobile-friendly interface
-- Offline capability
+- Mobile friendly
+- Offline capable
 - Lightweight deployment
+- No backend required
 
 ---
 
-🚀 Project Goal
+🎯 Project Goal
 
-To provide a simple and accessible way for Muslims to track Quran reading progress and maintain consistency in completing khatam.
+Provide a simple, lightweight, and accessible way for Muslims to track Quran reading progress and maintain consistency toward completing khatam.
 
 ---
 
@@ -117,14 +115,11 @@ To provide a simple and accessible way for Muslims to track Quran reading progre
 
 Alkareemco
 
-GitHub:
-https://github.com/alkareemco
+GitHub: https://github.com/alkareemco
 
-Website:
-https://alkablogz.my.id
+Website: https://alkablogz.my.id
 
-Project:
-https://alkablogz.my.id/quran
+Project: https://alkablogz.my.id/quran
 
 ---
 
@@ -134,8 +129,9 @@ MIT License
 
 ---
 
-<div align="center">⭐ If you find this project useful, consider starring the repository.
+<div align="center">⭐ If this project helps you, consider starring the repository.
 
-Built with dedication for the Quran community.
+Built for the Quran community.
 
+</div>
 </div>
